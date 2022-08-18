@@ -1,6 +1,5 @@
-package com.example.bukkit.templateplugin
+package top.iseason.bukkit.sakuramail
 
-import com.example.bukkit.templateplugin.ui.*
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionDefault
@@ -11,6 +10,7 @@ import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.ui.openPageableUI
 import top.iseason.bukkit.bukkittemplate.ui.openUI
 import top.iseason.bukkit.bukkittemplate.utils.sendMessage
+import top.iseason.bukkit.sakuramail.ui.*
 
 fun command1() {
     commandRoot("playerutil", alias = arrayOf("test1", "test2"), description = "测试命令1") {

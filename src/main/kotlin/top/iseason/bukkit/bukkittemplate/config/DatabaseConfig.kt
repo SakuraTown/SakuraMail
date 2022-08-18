@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.AutoDisable
@@ -18,6 +19,7 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.dependency.DependencyDownloader
+import top.iseason.bukkit.sakuramail.database.MySqlLogger
 import java.io.File
 
 @FilePath("database.yml")
@@ -123,7 +125,10 @@ object DatabaseConfig : SimpleYAMLConfig() {
                 poolName = BukkitTemplate.getPlugin().name
             }
             ds = HikariDataSource(config)
-            connection = Database.connect(ds!!)
+            val databaseConfig = DatabaseConfig.invoke {
+                sqlLogger = MySqlLogger
+            }
+            connection = Database.connect(ds!!, databaseConfig = databaseConfig)
             isConnected = true
             info("&a数据库链接成功!")
         }.getOrElse {

@@ -1,4 +1,4 @@
-package com.example.bukkit.templateplugin
+package top.iseason.bukkit.sakuramail
 
 import org.bukkit.configuration.ConfigurationSection
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig

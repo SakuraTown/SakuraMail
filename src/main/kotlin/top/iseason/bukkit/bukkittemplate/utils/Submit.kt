@@ -2,6 +2,7 @@ package top.iseason.bukkit.bukkittemplate.utils
 
 import org.bukkit.scheduler.BukkitRunnable
 import top.iseason.bukkit.bukkittemplate.BukkitTemplate
+import java.util.concurrent.CompletableFuture
 
 /**
  * 提交一个任务
@@ -43,4 +44,11 @@ class Submitter(
     override fun run() {
         task()
     }
+}
+
+/**
+ * 异步运行任务
+ */
+fun runAsync(action: () -> Unit) {
+    CompletableFuture.runAsync(action)
 }

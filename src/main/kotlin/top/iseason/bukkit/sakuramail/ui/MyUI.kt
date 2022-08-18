@@ -1,4 +1,4 @@
-package com.example.bukkit.templateplugin.ui
+package top.iseason.bukkit.sakuramail.ui
 
 import org.bukkit.ChatColor
 import org.bukkit.Material
