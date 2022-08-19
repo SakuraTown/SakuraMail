@@ -99,6 +99,50 @@ object ItemUtils {
     }
 
     /**
+     * 背包物品转化为字节，保存位置
+     */
+    fun toByteArrays(map: Map<Int, ItemStack>): ByteArray {
+        val outputStream = ByteArrayOutputStream()
+        BukkitObjectOutputStream(outputStream).use {
+            map.forEach { (index, itemStack) ->
+                it.writeInt(index)
+                it.writeObject(itemStack)
+            }
+        }
+        val gzipStream = ByteArrayOutputStream()
+        GZIPOutputStream(gzipStream).use { it.write(outputStream.toByteArray()) }
+        return gzipStream.toByteArray()
+    }
+
+    /**
+     * 背包物品转化为字符串，保存位置
+     */
+    fun toBase64(map: Map<Int, ItemStack>): String {
+        return Base64.getEncoder().encodeToString(toByteArrays(map))
+    }
+
+    /**
+     * 背包物品转化为字符串，保存位置
+     */
+    fun fromBase64ToMap(string: String): MutableMap<Int, ItemStack> {
+        return fromByteArraysToMap(Base64.getDecoder().decode(string))
+    }
+
+    fun fromByteArraysToMap(bytes: ByteArray): MutableMap<Int, ItemStack> {
+        val map = mutableMapOf<Int, ItemStack>()
+        GZIPInputStream(ByteArrayInputStream(bytes)).use { it1 ->
+            BukkitObjectInputStream(it1).use {
+                runCatching {
+                    while (true) {
+                        map[it.readInt()] = it.readObject() as ItemStack
+                    }
+                }
+            }
+        }
+        return map
+    }
+
+    /**
      * 字节转换为一组ItemStack
      */
     fun fromByteArrays(bytes: ByteArray): List<ItemStack> {

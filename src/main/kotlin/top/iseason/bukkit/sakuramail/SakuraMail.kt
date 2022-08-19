@@ -2,10 +2,12 @@ package top.iseason.bukkit.sakuramail
 
 import org.bukkit.Bukkit
 import top.iseason.bukkit.bukkittemplate.KotlinPlugin
+import top.iseason.bukkit.bukkittemplate.command.CommandBuilder
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.info
+import top.iseason.bukkit.sakuramail.command.command
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
 
@@ -30,8 +32,9 @@ object SakuraMail : KotlinPlugin() {
         runCatching {
             Bukkit.getOnlinePlayers().forEach { PlayerListener.onLogin(it) }
         }.getOrElse { it.printStackTrace() }
+        command()
         //如果使用命令模块，取消注释
-//        CommandBuilder.updateCommands()
+        CommandBuilder.updateCommands()
         //如果使用UI模块,取消注释
 
     }
