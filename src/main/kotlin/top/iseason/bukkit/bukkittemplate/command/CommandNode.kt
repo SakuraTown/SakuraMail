@@ -49,7 +49,7 @@ open class CommandNode(
     /**
      * 命令执行
      */
-    var onExecute: (Params.(sender: CommandSender) -> Boolean)? = null
+    open var onExecute: (Params.(sender: CommandSender) -> Boolean)? = null
 ) : CommandExecutor, TabExecutor {
     var permission: Permission =
         Permission("${BukkitTemplate.getPlugin().name.lowercase()}.$name", default)
@@ -96,6 +96,7 @@ open class CommandNode(
         }
         subNodes[node.name] = node
         node.parent = this
+        CommandBuilder.addPermissions(node.permission)
         node.alias?.forEach {
             subNodes[it] = node
         }

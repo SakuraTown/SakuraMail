@@ -77,6 +77,7 @@ object PlayerTimes : IntIdTable() {
         val type = split.getOrNull(0) ?: return null
         val op = split.getOrNull(1) ?: return null
         when (type) {
+            // 登录、退出时间
             "loginTime", "quitTime" -> {
                 val timeStr = split.getOrNull(2) ?: return null
                 val time = runCatching {
@@ -93,7 +94,7 @@ object PlayerTimes : IntIdTable() {
                     return timeColum.between(time, time2)
                 }
             }
-
+            //一次游戏时间
             "playTime" -> {
                 val durationStr = split.getOrNull(2) ?: return null
                 val duration = runCatching { Duration.parse(durationStr) }.getOrElse { return null }
@@ -107,7 +108,7 @@ object PlayerTimes : IntIdTable() {
     /**
      * 解析参数为sql组合条件
      */
-    fun parseArgs(args: Array<String>): Op<Boolean>? {
+    fun parseArgs(args: List<String>): Op<Boolean>? {
         var build: OpBuilder? = null
         for (arg in args) {
             val split = arg.removePrefix("--").split(':', limit = 2)

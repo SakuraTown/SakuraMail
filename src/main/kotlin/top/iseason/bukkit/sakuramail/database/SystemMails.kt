@@ -1,6 +1,9 @@
 package top.iseason.bukkit.sakuramail.database
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.StringEntity
 import top.iseason.bukkit.bukkittemplate.config.StringEntityClass
 import top.iseason.bukkit.bukkittemplate.config.StringIdTable
@@ -27,6 +30,19 @@ object SystemMails : StringIdTable() {
      * 附件 命令
      */
     val commands = text("commands").nullable()
+
+    /**
+     * 判断Table是否有某个id的记录
+     */
+    fun <T : Comparable<T>> IdTable<T>.has(id: T): Boolean {
+        return try {
+            transaction {
+                !this@has.slice(this@has.id).select { this@has.id eq id }.limit(1).empty()
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
 
 class SystemMail(
@@ -52,4 +68,5 @@ class SystemMail(
         }
         return systemMailYml
     }
+
 }

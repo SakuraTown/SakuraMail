@@ -1,14 +1,18 @@
 package top.iseason.bukkit.sakuramail.config
 
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
+import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.SystemMail
 
 @FilePath("mails.yml")
@@ -67,6 +71,7 @@ object SystemMailsYml : SimpleYAMLConfig() {
      * 数据保存至yml
      */
     fun saveToYml() {
+        config.getKeys(false).forEach { config.set(it, null) }
         for (mail in mails) {
             config[mail.key] = mail.value.toSection()
         }
@@ -93,7 +98,13 @@ data class SystemMailYml(
         section["id"] = id
         section["icon"] = icon
         section["title"] = title
-        section["items"] = ItemUtils.toBase64(items)
+        if (items.isNotEmpty()) {
+            section["items"] = ItemUtils.toBase64(items)
+            section["fakeItems"] = items.mapNotNull {
+                if (it.value.isFakeItem()) it.key
+                else null
+            }.joinToString(",")
+        }
         section["commands"] = commands
         return section
     }
@@ -113,6 +124,9 @@ data class SystemMailYml(
         mail
     }
 
+    /**
+     * 更新数据
+     */
     private fun SystemMail.update() {
         this.icon = ExposedBlob(ItemUtils.toByteArray(this@SystemMailYml.icon))
         this.title = this@SystemMailYml.title
@@ -136,10 +150,28 @@ data class SystemMailYml(
             val systemMailYml = SystemMailYml(id, icon, title)
             val items = section.getString("items")
             if (items != null) {
-                systemMailYml.items = ItemUtils.fromBase64ToMap(items)
+                val fromBase64ToMap = ItemUtils.fromBase64ToMap(items)
+                val string = section.getString("fakeItems")
+                if (string != null) {
+                    for (s in string.split(',')) {
+                        runCatching {
+                            fromBase64ToMap[s.toInt()]?.applyMeta {
+                                persistentDataContainer.set(FAKE_ITEM, PersistentDataType.BYTE, 1)
+                            }
+                        }
+                    }
+                }
+                systemMailYml.items = fromBase64ToMap
             }
             systemMailYml.commands = section.getStringList("commands")
             return systemMailYml
         }
+
+        /**
+         * 检测此Item是否是虚拟物品，将不会给予玩家
+         */
+        fun ItemStack.isFakeItem() = itemMeta?.persistentDataContainer?.has(FAKE_ITEM, PersistentDataType.BYTE) == true
+
+        private val FAKE_ITEM = NamespacedKey(SakuraMail.javaPlugin, "sakura_mail_fake_item")
     }
 }
