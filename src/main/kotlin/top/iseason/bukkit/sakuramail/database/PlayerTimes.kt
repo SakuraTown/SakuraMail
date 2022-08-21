@@ -100,6 +100,11 @@ object PlayerTimes : IntIdTable() {
                 val duration = runCatching { Duration.parse(durationStr) }.getOrElse { return null }
                 if ("greater" == op) return playTime.greater(duration)
                 if ("less" == op) return playTime.less(duration)
+                if ("between" == op) {
+                    val durationStr2 = split.getOrNull(3) ?: return null
+                    val duration2 = runCatching { Duration.parse(durationStr2) }.getOrElse { return null }
+                    return playTime.between(duration, duration2)
+                }
             }
         }
         return null

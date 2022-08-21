@@ -10,6 +10,7 @@ import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.sakuramail.command.command
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
+import top.iseason.bukkit.sakuramail.database.MailReceivers
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
@@ -28,7 +29,7 @@ object SakuraMail : KotlinPlugin() {
         SimpleLogger.isDebug = true
         //使用数据库请取消注释以下2行
         DatabaseConfig.load(false)
-        DatabaseConfig.initTables(PlayerTimes, SystemMails)
+        DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers)
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
         registerListeners(PlayerListener)

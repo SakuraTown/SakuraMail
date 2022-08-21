@@ -25,7 +25,10 @@ fun command() {
         ReceiverCommand.apply {
             addSubNode(ReceiverSetCommand)
             addSubNode(ReceiverAddCommand)
+            addSubNode(ReceiverRemoveCommand)
             addSubNode(ReceiverTestCommand)
+            addSubNode(ReceiverUploadCommand)
+            addSubNode(ReceiverDownloadCommand)
         }
     }
 }
