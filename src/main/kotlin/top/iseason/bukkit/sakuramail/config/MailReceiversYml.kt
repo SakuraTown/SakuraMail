@@ -65,7 +65,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
      * 解析某个id的接收者
      */
     fun getReceivers(id: String): List<UUID>? {
-        val strings = timeReceivers[id] ?: return null
+        val strings = getReceiver(id) ?: return null
         return getReceivers(strings)
     }
 

@@ -27,7 +27,6 @@ object SakuraMail : KotlinPlugin() {
 
     override fun onAsyncEnable() {
         SimpleLogger.isDebug = true
-        //使用数据库请取消注释以下2行
         DatabaseConfig.load(false)
         DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers)
         SystemMailsYml.load(false)
@@ -38,10 +37,7 @@ object SakuraMail : KotlinPlugin() {
             Bukkit.getOnlinePlayers().forEach { PlayerListener.onLogin(it) }
         }.getOrElse { it.printStackTrace() }
         command()
-        //如果使用命令模块，取消注释
         CommandBuilder.updateCommands()
-        //如果使用UI模块,取消注释
-
     }
 
     override fun onDisable() {

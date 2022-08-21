@@ -10,8 +10,13 @@ import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
 import top.iseason.bukkit.sakuramail.database.MailReceivers
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import java.util.*
 
 
 object ReceiverCommand : CommandNode(
@@ -144,6 +149,42 @@ object ReceiverTestCommand : CommandNode(
                 }
             }"
         )
+        true
+    }
+}
+
+object ReceiverExportCommand : CommandNode(
+    name = "export",
+    description = "导出符合邮件接收者的玩家",
+    default = PermissionDefault.OP,
+    params = arrayOf(
+        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
+        Param("<type>", suggest = listOf("name", "uuid"))
+    ),
+    async = true
+) {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = { it ->
+        val id = getParam<String>(0)
+        var receivers: List<UUID> =
+            MailReceiversYml.getReceivers(id) ?: throw ParmaException("&cid不存在!")
+        if (receivers.isEmpty()) it.sendColorMessages("&6没有符合条件的接收者!")
+        else it.sendColorMessages("&a找到 ${receivers.size} 个接收者")
+        val type = getOptionalParam<String>(1) ?: "name"
+        val results: List<String> = if (type == "name")
+            receivers.mapNotNull { (Bukkit.getPlayer(it) ?: Bukkit.getOfflinePlayer(it)).name }
+        else receivers.map { it.toString() }
+        val file = File(SakuraMail.javaPlugin.dataFolder, "export${File.separatorChar}$id-$type.txt")
+        if (!file.exists()) {
+            file.parentFile.mkdirs()
+            file.createNewFile()
+        }
+        BufferedWriter(FileWriter(file)).use { bw ->
+            for (receiver in results) {
+                bw.write(receiver)
+                bw.newLine()
+            }
+        }
+        it.sendColorMessages("&a文件已输出: $file")
         true
     }
 }

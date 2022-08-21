@@ -1,9 +1,11 @@
 package top.iseason.bukkit.sakuramail.config
 
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -12,6 +14,9 @@ import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.checkAir
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
+import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.SystemMail
 
@@ -89,6 +94,52 @@ data class SystemMailYml(
     var items: MutableMap<Int, ItemStack> = mutableMapOf(),
     var commands: MutableList<String> = mutableListOf()
 ) {
+    /**
+     * 将礼包给予玩家
+     */
+    fun apply(player: Player): Boolean {
+        val filter = items.values.filter { !it.isFakeItem() }
+        val emptySlot = player.openInventory.bottomInventory.filter { it == null || it.type.checkAir() }.count()
+        if (filter.size > emptySlot) return false
+        player.giveItems(filter)
+        submit {
+            for (command in commands) {
+                parseCommand(command, player)
+            }
+        }
+        return true
+    }
+
+    private fun parseCommand(command: String, player: Player) {
+        var playerCommand = command.replace("%player%", player.name)
+        if (playerCommand.startsWith("CMD:", true)) {
+            playerCommand = playerCommand.removeRange(0, 3)
+            try {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), playerCommand)
+            } catch (_: Exception) {
+            }
+        } else if (playerCommand.startsWith("OP:", true)) {
+            playerCommand = playerCommand.removeRange(0, 2)
+            val setOp = !player.isOp
+            if (setOp) {
+                player.isOp = true
+                try {
+                    Bukkit.dispatchCommand(player, playerCommand)
+                } catch (_: Exception) {
+                } finally {
+                    player.isOp = false
+                }
+            } else {
+                Bukkit.dispatchCommand(player, playerCommand)
+            }
+        } else {
+            try {
+                Bukkit.dispatchCommand(player, playerCommand)
+            } catch (_: Exception) {
+            }
+        }
+
+    }
 
     /**
      * 序列化为section

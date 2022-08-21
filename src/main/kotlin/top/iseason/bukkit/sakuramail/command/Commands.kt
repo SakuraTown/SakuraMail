@@ -4,8 +4,6 @@ import org.bukkit.permissions.PermissionDefault
 import top.iseason.bukkit.bukkittemplate.command.commandRoot
 
 fun command() {
-
-
     commandRoot(
         "sakuramail",
         alias = arrayOf("smail", "mail"),
@@ -29,6 +27,7 @@ fun command() {
             addSubNode(ReceiverTestCommand)
             addSubNode(ReceiverUploadCommand)
             addSubNode(ReceiverDownloadCommand)
+            addSubNode(ReceiverExportCommand)
         }
     }
 }
