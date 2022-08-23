@@ -1,11 +1,13 @@
 package top.iseason.bukkit.sakuramail.database
 
+import org.bukkit.entity.Player
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.javatime.datetime
@@ -73,17 +75,17 @@ object PlayerTimes : IntIdTable() {
      * playTime 不支持绝对时间
      */
     fun parseOP(str: String): Op<Boolean>? {
-        val split = str.split('.')
-        val type = split.getOrNull(0) ?: return null
-        val op = split.getOrNull(1) ?: return null
+        val split = str.split('_')
+        val type = split.getOrNull(0)?.lowercase() ?: return null
+        val op = split.getOrNull(1)?.lowercase() ?: return null
         when (type) {
             // 登录、退出时间
-            "loginTime", "quitTime" -> {
+            "logintime", "quittime" -> {
                 val timeStr = split.getOrNull(2) ?: return null
                 val time = runCatching {
                     LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 }.getOrElse { TimeUtils.parseTime(timeStr) }
-                val timeColum = if (type == "loginTime") loginTime else quitTime
+                val timeColum = if (type == "logintime") loginTime else quitTime
                 if ("before" == op) return timeColum.between(LocalDateTime.of(0, 1, 1, 0, 0), time)
                 if ("after" == op) return timeColum.between(time, LocalDateTime.of(100000, 1, 1, 0, 0))
                 if ("between" == op) {
@@ -95,7 +97,7 @@ object PlayerTimes : IntIdTable() {
                 }
             }
             //一次游戏时间
-            "playTime" -> {
+            "playtime" -> {
                 val durationStr = split.getOrNull(2) ?: return null
                 val duration = runCatching { Duration.parse(durationStr) }.getOrElse { return null }
                 if ("greater" == op) return playTime.greater(duration)
@@ -106,6 +108,7 @@ object PlayerTimes : IntIdTable() {
                     return playTime.between(duration, duration2)
                 }
             }
+
         }
         return null
     }
@@ -113,13 +116,16 @@ object PlayerTimes : IntIdTable() {
     /**
      * 解析参数为sql组合条件
      */
-    fun parseArgs(args: List<String>): Op<Boolean>? {
+    fun parseArgs(args: List<String>, player: Player? = null): Op<Boolean>? {
         var build: OpBuilder? = null
+        if (player != null) {
+            build = OpBuilder(PlayerTimes.player eq player.uniqueId)
+        }
         for (arg in args) {
             val split = arg.removePrefix("--").split(':', limit = 2)
             //默认and
             var ex: Op<Boolean>? = null
-            var op = "add"
+            var op = "and"
             if (split.size == 1) {
                 ex = parseOP(split[0])
             } else if (split.size >= 2) {

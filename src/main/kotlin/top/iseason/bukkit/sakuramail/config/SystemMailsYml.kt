@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
@@ -19,6 +20,7 @@ import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.SystemMail
+import top.iseason.bukkit.sakuramail.database.SystemMails
 
 @FilePath("mails.yml")
 object SystemMailsYml : SimpleYAMLConfig() {
@@ -51,10 +53,20 @@ object SystemMailsYml : SimpleYAMLConfig() {
     /**
      * 将本地数据上传至数据库
      */
-    fun uploadDatabase() {
+    fun upload() {
         transaction {
+            SystemMails.deleteWhere { SystemMails.type eq "system" }
             for (value in mails.values) {
-                value.toDatabase()
+                SystemMail.new(value.id) {
+                    this.icon = ExposedBlob(ItemUtils.toByteArray(value.icon))
+                    this.title = value.title
+                    if (value.items.isNotEmpty()) {
+                        this.items = ExposedBlob(ItemUtils.toByteArrays(value.items))
+                    }
+                    if (value.commands.isNotEmpty()) {
+                        this.commands = value.commands.joinToString(";")
+                    }
+                }
             }
         }
     }
@@ -65,7 +77,7 @@ object SystemMailsYml : SimpleYAMLConfig() {
     fun downloadFromDatabase() {
         mails.clear()
         transaction {
-            for (systemMail in SystemMail.all()) {
+            for (systemMail in SystemMail.find { SystemMails.type eq "system" }) {
                 mails[systemMail.id.value] = systemMail.toYml()
             }
         }

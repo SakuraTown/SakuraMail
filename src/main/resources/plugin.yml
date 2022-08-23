@@ -18,5 +18,6 @@ runtime-libraries:
     - org.jetbrains.exposed:exposed-jdbc:${exposedVersion}
     - org.jetbrains.exposed:exposed-java-time:${exposedVersion}
     - com.zaxxer:HikariCP:4.0.3
+    - org.quartz-scheduler:quartz:2.3.2
 #    - org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}
 

@@ -29,5 +29,10 @@ fun command() {
             addSubNode(ReceiverDownloadCommand)
             addSubNode(ReceiverExportCommand)
         }
+        node(SenderCommand)
+        SenderCommand.apply {
+            addSubNode(SenderCreateCommand)
+            addSubNode(SenderRemoveCommand)
+        }
     }
 }

@@ -117,7 +117,7 @@ object SystemMailUploadCommand : CommandNode(
     async = true
 ) {
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
-        runCatching { SystemMailsYml.uploadDatabase() }.getOrElse {
+        runCatching { SystemMailsYml.upload() }.getOrElse {
             it.printStackTrace()
             throw ParmaException("&c数据上传异常!")
         }

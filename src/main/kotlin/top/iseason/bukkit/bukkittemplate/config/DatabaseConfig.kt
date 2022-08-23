@@ -49,6 +49,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
     var password = "password"
 
     var isConnected = false
+    var isConnecting = false
     private lateinit var connection: Database
     private var ds: HikariDataSource? = null
 
@@ -61,7 +62,9 @@ object DatabaseConfig : SimpleYAMLConfig() {
      * 链接数据库
      */
     fun reConnected() {
+        if (isConnecting) return
         info("&6数据库链接中...")
+        isConnecting = true
         AutoClose
         closeDB()
         runCatching {
@@ -136,6 +139,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
             it.printStackTrace()
             info("&c数据库链接失败!")
         }
+        isConnecting = false
     }
 
     /**

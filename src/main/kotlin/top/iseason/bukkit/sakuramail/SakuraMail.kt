@@ -9,11 +9,16 @@ import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.sakuramail.command.command
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
+import top.iseason.bukkit.sakuramail.config.MailSendersYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
-import top.iseason.bukkit.sakuramail.database.MailReceivers
-import top.iseason.bukkit.sakuramail.database.PlayerTimes
-import top.iseason.bukkit.sakuramail.database.SystemMails
+import top.iseason.bukkit.sakuramail.database.*
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
+import java.nio.file.Files
+import java.util.*
+
 
 object SakuraMail : KotlinPlugin() {
 
@@ -28,9 +33,10 @@ object SakuraMail : KotlinPlugin() {
     override fun onAsyncEnable() {
         SimpleLogger.isDebug = true
         DatabaseConfig.load(false)
-        DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers)
+        DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
+        MailSendersYml.load(false)
         registerListeners(PlayerListener)
 
         runCatching {
@@ -41,10 +47,25 @@ object SakuraMail : KotlinPlugin() {
     }
 
     override fun onDisable() {
+        MailSendersYml.executor.shutdown()
+        MailSendersYml.scheduler.shutdown()
         runCatching {
             Bukkit.getOnlinePlayers().forEach { PlayerListener.onQuit(it) }
         }.getOrElse { it.printStackTrace() }
         info("&6插件已卸载! ")
     }
 
+
+    fun loadOrCopyQuartzProperties(): Properties {
+        val quartzProperties = File(javaPlugin.dataFolder, "quartz.properties")
+        if (!quartzProperties.exists()) {
+            javaPlugin.getResource("quartz.properties")?.use {
+                Files.copy(it, quartzProperties.toPath())
+            }
+        }
+        val prop = Properties()
+        val targetStream: InputStream = FileInputStream(quartzProperties)
+        prop.load(targetStream)
+        return prop
+    }
 }

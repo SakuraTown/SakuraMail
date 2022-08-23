@@ -12,6 +12,11 @@ import top.iseason.bukkit.sakuramail.config.SystemMailYml
 
 object SystemMails : StringIdTable() {
     /**
+     * 邮件类型，默认为系统邮件，不会被删除
+     */
+    val type = varchar("type", 255).default("system")
+
+    /**
      * 显示的图标
      */
     val icon = blob("icon")

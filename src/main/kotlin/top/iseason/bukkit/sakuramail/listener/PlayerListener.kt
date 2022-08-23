@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.utils.runAsync
+import top.iseason.bukkit.sakuramail.config.MailSendersYml
 import top.iseason.bukkit.sakuramail.database.PlayerTime
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
 import java.time.Duration
@@ -45,7 +46,13 @@ object PlayerListener : Listener {
 
     @EventHandler
     fun onPlayerLoginEvent(event: PlayerLoginEvent) {
-        runAsync { onLogin(event.player) }
+        runAsync {
+            onLogin(event.player)
+            MailSendersYml.senders.values.forEach {
+                if (it.type != "login") return@forEach
+                it.onSend(it.getAllReceivers(it.receivers, event.player))
+            }
+        }
     }
 
     @EventHandler
