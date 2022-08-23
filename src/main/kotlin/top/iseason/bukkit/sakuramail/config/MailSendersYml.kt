@@ -1,6 +1,7 @@
 package top.iseason.bukkit.sakuramail.config
 
 import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
@@ -11,7 +12,9 @@ import org.quartz.impl.StdSchedulerFactory
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
+import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
+import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.MailRecord
 import top.iseason.bukkit.sakuramail.database.MailSender
@@ -28,9 +31,10 @@ import java.util.concurrent.TimeUnit
 
 @FilePath("senders.yml")
 object MailSendersYml : SimpleYAMLConfig() {
-    val executor = ScheduledThreadPoolExecutor(10).apply {
+    val executor = ScheduledThreadPoolExecutor(3).apply {
         removeOnCancelPolicy = true
     }
+
     val scheduler: Scheduler = StdSchedulerFactory(SakuraMail.loadOrCopyQuartzProperties()).scheduler
     val schedules = mutableListOf<ScheduledFuture<*>>()
     var senders = mutableMapOf<String, MailSenderYml>()
@@ -84,7 +88,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      */
     fun setupPeriodTask(sender: MailSenderYml) {
         val cronSchedule = runCatching { CronScheduleBuilder.cronSchedule(sender.param) }.getOrElse {
-            info("&6period 任务 &7${sender.id} &6的 cron表达式 不正确:&7 ${sender.param}")
+            info("&6period 任务 &7${sender.id} &6的 cron 表达式 不正确:&7 ${sender.param}")
             return
         }
         val trigger = TriggerBuilder.newTrigger()
@@ -98,7 +102,6 @@ object MailSendersYml : SimpleYAMLConfig() {
         scheduler.scheduleJob(job, trigger);
         info("&aOnTime &a任务 &6${sender.id} 已启动: &6${sender.param}")
     }
-
 
     /**
      * 获取邮件发送者并缓存
@@ -201,9 +204,9 @@ class MailSenderYml(
         return section
     }
 
-    fun onSend(receivers: List<UUID>) {
+    fun onSend(receivers: List<UUID>, sender: CommandSender = Bukkit.getConsoleSender()) {
         if (!DatabaseConfig.isConnected) {
-            error("&c邮件 ${id} 发送失败，数据库未链接!")
+            sender.sendColorMessages("&c邮件 ${id} 发送失败，数据库未链接!")
         }
         if (mails.isEmpty()) return
         transaction {
@@ -216,7 +219,8 @@ class MailSenderYml(
                         sendTime = LocalDateTime.now()
                     }
                 }
-                info("&a已发送&6 ${m.id} ${receivers.size} &a份!")
+                sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")
+                debug("&a已发送&6 ${m.id} ${receivers.size} &a份!")
             }
         }
     }

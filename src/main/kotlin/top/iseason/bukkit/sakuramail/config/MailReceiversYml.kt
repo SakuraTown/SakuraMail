@@ -2,7 +2,10 @@ package top.iseason.bukkit.sakuramail.config
 
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
@@ -10,8 +13,11 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.sakuramail.database.MailReceiver
 import top.iseason.bukkit.sakuramail.database.MailReceivers
+import top.iseason.bukkit.sakuramail.database.MailRecords
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
+import top.iseason.bukkit.sakuramail.utils.TimeUtils
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 
 @FilePath("receiver.yml")
@@ -88,7 +94,6 @@ object MailReceiversYml : SimpleYAMLConfig() {
             val operation = PlayerTimes.parseArgs(temp, player)
             transaction {
                 var resultSet = setOf<UUID>()
-                //数量限制
                 //常规查询
                 if (operation != null) {
                     var query = PlayerTimes.slice(PlayerTimes.player).select {
@@ -98,7 +103,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
                     if (limit != null) query = query.limit(limit)
                     //符合条件的UUID
                     resultSet =
-                        query.orderBy(PlayerTimes.id, SortOrder.DESC).distinctBy { PlayerTimes.id }
+                        query.orderBy(PlayerTimes.id, SortOrder.DESC).distinctBy { PlayerTimes.player }
                             .map { it[PlayerTimes.player] }.toSet()
                 }
                 resultSet
@@ -108,25 +113,29 @@ object MailReceiversYml : SimpleYAMLConfig() {
         //处理其他的
         temp.forEach { param ->
             runCatching {
-                val args = param.removePrefix("--").split(':', limit = 2)
+                val args = param.removePrefix("--").split(',', limit = 2)
                 val op = if (args.size >= 2) args[0] else "and"
                 val split = args.last().split('_')
                 var duration: Duration? = null
                 var setStr = split[0]
+                //totaltime_greater_PT1H_STime1_ETime2
                 if (param.contains("totaltime", true)) {
-                    duration = runCatching { Duration.parse(split[2]) }.getOrNull() ?: return@forEach
-                    val operation = PlayerTimes.playTime.sum()
+                    duration = TimeUtils.parseDuration(split[2]) ?: return@forEach
+                    var startTime: LocalDateTime = LocalDateTime.of(0, 1, 1, 0, 0)
+                    var endTime: LocalDateTime = LocalDateTime.of(100000, 1, 1, 0, 0)
+                    split.getOrNull(3)?.let {
+                        if (it.startsWith("s", true))
+                            startTime = TimeUtils.parseTime(it.drop(1))
+                        else endTime = TimeUtils.parseTime(it.drop(1))
+                    }
+                    split.getOrNull(4)?.let {
+                        if (it.startsWith("s", true))
+                            startTime = TimeUtils.parseTime(it.drop(1))
+                        else endTime = TimeUtils.parseTime(it.drop(1))
+                    }
                     if (totalMap == null) {
-                        transaction {
-                            var query = if (uuid == null)
-                                PlayerTimes.slice(PlayerTimes.player, operation).selectAll().groupBy(PlayerTimes.player)
-                            else PlayerTimes.slice(PlayerTimes.player, operation).select { PlayerTimes.player eq uuid }
-                                .groupBy(PlayerTimes.player)
-                            if (limit != null) query = query.limit(limit)
-                            totalMap = query.associate {
-                                it[PlayerTimes.player] to (it[operation] ?: Duration.ofSeconds(0))
-                            }
-                        }
+                        totalMap = if (uuid == null) PlayerTimes.getTotalTimes(startTime, endTime)
+                        else mapOf(uuid to PlayerTimes.getTotalTime(uuid, startTime, endTime))
                     }
                     setStr = split[1]
                 }
@@ -140,9 +149,15 @@ object MailReceiversYml : SimpleYAMLConfig() {
                     }
 
                     "between" -> {
-                        val duration2 =
-                            runCatching { Duration.parse(split[3]) }.getOrNull() ?: Duration.ofSeconds(0)
+                        val duration2 = TimeUtils.parseDuration(split[3]) ?: Duration.ZERO
                         totalMap!!.mapNotNull { (u, d) -> if (d > duration && d < duration2) u else null }.toSet()
+                    }
+
+                    "hasmail" -> {
+                        val mailId = split[2]
+                        MailRecords.slice(MailRecords.player).select { MailRecords.mail eq mailId }
+                            .distinctBy { MailRecords.player }
+                            .map { it[MailRecords.player] }.toSet()
                     }
 
                     "online" -> Bukkit.getOnlinePlayers().map { p -> p.uniqueId }.toSet()
@@ -151,7 +166,8 @@ object MailReceiversYml : SimpleYAMLConfig() {
                         .mapNotNull { p -> if (!p.isOnline) p.uniqueId else null }
                         .toSet()
 
-                    "all" -> Bukkit.getOfflinePlayers()
+                    "all" -> PlayerTimes.getAllPlayers().toSet()
+                    "localall" -> Bukkit.getOfflinePlayers()
                         .mapNotNull { p -> if (p.hasPlayedBefore()) p.uniqueId else null }.toSet()
 
                     "permission" -> (if (player == null) Bukkit.getOnlinePlayers() else setOf(player))
@@ -178,8 +194,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
                 when (op) {
                     "and" -> resultSet = if (resultSet.isEmpty()) set else resultSet.intersect(set)
                     "andNot" -> {
-                        val all = Bukkit.getOfflinePlayers()
-                            .mapNotNull { p -> if (p.hasPlayedBefore()) p.uniqueId else null }.toMutableSet()
+                        val all = PlayerTimes.getAllPlayers().toSet().toMutableSet()
                         all.removeAll(set)
                         resultSet = if (resultSet.isEmpty()) all else resultSet.intersect(all)
                     }
@@ -187,8 +202,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
                     "or", "add" -> resultSet = resultSet.union(set)
                     "remove" -> resultSet = resultSet.toMutableSet().apply { removeAll(set) }
                     "orNot" -> {
-                        val all = Bukkit.getOfflinePlayers()
-                            .mapNotNull { p -> if (p.hasPlayedBefore()) p.uniqueId else null }.toMutableSet()
+                        val all = PlayerTimes.getAllPlayers().toSet().toMutableSet()
                         all.removeAll(set)
                         resultSet = resultSet.union(all)
                     }

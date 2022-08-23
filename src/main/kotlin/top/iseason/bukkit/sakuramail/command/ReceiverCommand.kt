@@ -203,9 +203,9 @@ object ReceiverUploadCommand : CommandNode(
             MailReceiversYml.upload()
         }.getOrElse {
             it.printStackTrace()
-            throw ParmaException("&c数据上传异常!")
+            throw ParmaException("&cMailReceiver数据上传异常!")
         }
-        it.sendColorMessages("&a数据上传成功!")
+        it.sendColorMessages("&aMailReceiver数据上传成功!")
         true
     }
 }
@@ -224,9 +224,9 @@ object ReceiverDownloadCommand : CommandNode(
             MailReceiversYml.download()
         }.getOrElse {
             it.printStackTrace()
-            throw ParmaException("&c数据下载异常!")
+            throw ParmaException("&cMailReceiver数据下载异常!")
         }
-        it.sendColorMessages("&a数据下载成功!")
+        it.sendColorMessages("&aMailReceiver数据下载成功!")
         true
     }
 }

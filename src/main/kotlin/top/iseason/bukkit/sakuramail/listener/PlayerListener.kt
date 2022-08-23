@@ -47,11 +47,11 @@ object PlayerListener : Listener {
     @EventHandler
     fun onPlayerLoginEvent(event: PlayerLoginEvent) {
         runAsync {
-            onLogin(event.player)
             MailSendersYml.senders.values.forEach {
                 if (it.type != "login") return@forEach
                 it.onSend(it.getAllReceivers(it.receivers, event.player))
             }
+            onLogin(event.player)
         }
     }
 

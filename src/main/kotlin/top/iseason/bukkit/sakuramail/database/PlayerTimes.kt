@@ -12,10 +12,10 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.duration
+import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.sakuramail.utils.TimeUtils
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
@@ -46,18 +46,64 @@ object PlayerTimes : IntIdTable() {
     /**
      * 获取总共游玩的时间
      */
-    fun getTotalTime(uuid: UUID): Long {
-        var time = 0L
-        val playerTimes = PlayerTime.find { player eq uuid }
+    fun getTotalTime(
+        uuid: UUID,
+        start: LocalDateTime = LocalDateTime.of(0, 1, 1, 0, 0),
+        end: LocalDateTime = LocalDateTime.of(100000, 1, 1, 0, 0)
+    ): Duration {
+        var duration = Duration.ZERO
+        val playerTimes =
+            PlayerTime.find { player eq uuid and (loginTime.between(start, end) or loginTime.between(start, end)) }
+        val now = LocalDateTime.now()
         for (playerTime in playerTimes) {
-            if (playerTime.playTime == null) continue
-            time += playerTime.playTime!!.toMillis()
+            val dura = when {
+                playerTime.loginTime.isBefore(start) -> {
+                    if (playerTime.playTime == null) Duration.between(start, now)
+                    else
+                        playerTime.playTime!!.minus(Duration.between(playerTime.loginTime, start))
+                }
+
+                playerTime.quitTime == null -> Duration.between(playerTime.loginTime, now)
+                playerTime.quitTime!!.isAfter(end) -> Duration.between(playerTime.loginTime, end)
+                else -> playerTime.playTime!!
+            }
+            duration = duration.plus(dura)
         }
-        val lastOrNull = playerTimes.lastOrNull()
-        if (lastOrNull != null && lastOrNull.playTime == null) {
-            time += Duration.between(lastOrNull.loginTime, LocalDateTime.now()).toMillis()
+        return duration
+    }
+
+    fun getTotalTimes(
+        start: LocalDateTime = LocalDateTime.of(0, 1, 1, 0, 0),
+        end: LocalDateTime = LocalDateTime.of(100000, 1, 1, 0, 0)
+    ): Map<UUID, Duration> {
+        val mutableMapOf = mutableMapOf<UUID, Duration>()
+        val now = LocalDateTime.now()
+        transaction {
+            for (playerTime in PlayerTime.find { loginTime.between(start, end) or loginTime.between(start, end) }) {
+                val duration = when {
+                    playerTime.loginTime.isBefore(start) -> {
+                        if (playerTime.playTime == null) Duration.between(start, now)
+                        else
+                            playerTime.playTime!!.minus(Duration.between(playerTime.loginTime, start))
+                    }
+
+                    playerTime.quitTime == null -> Duration.between(playerTime.loginTime, now)
+                    playerTime.quitTime!!.isAfter(end) -> Duration.between(playerTime.loginTime, end)
+                    else -> playerTime.playTime!!
+                }
+                val rawDuration = mutableMapOf[playerTime.player]
+                if (rawDuration == null) mutableMapOf[playerTime.player] = duration
+                else mutableMapOf[playerTime.player] = rawDuration.plus(duration)
+            }
         }
-        return time
+        return mutableMapOf
+    }
+
+    /**
+     * 获取所有数据库记录的玩家
+     */
+    fun getAllPlayers() = transaction {
+        PlayerTimes.slice(player).selectAll().distinctBy { player }.map { it[player] }
     }
 
 
@@ -82,29 +128,25 @@ object PlayerTimes : IntIdTable() {
             // 登录、退出时间
             "logintime", "quittime" -> {
                 val timeStr = split.getOrNull(2) ?: return null
-                val time = runCatching {
-                    LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                }.getOrElse { TimeUtils.parseTime(timeStr) }
+                val time = TimeUtils.parseTime(timeStr)
                 val timeColum = if (type == "logintime") loginTime else quitTime
                 if ("before" == op) return timeColum.between(LocalDateTime.of(0, 1, 1, 0, 0), time)
                 if ("after" == op) return timeColum.between(time, LocalDateTime.of(100000, 1, 1, 0, 0))
                 if ("between" == op) {
                     val timeStr2 = split.getOrNull(3) ?: return null
-                    val time2 = runCatching {
-                        LocalDateTime.parse(timeStr2, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                    }.getOrElse { TimeUtils.parseTime(timeStr) }
+                    val time2 = TimeUtils.parseTime(timeStr2)
                     return timeColum.between(time, time2)
                 }
             }
             //一次游戏时间
             "playtime" -> {
                 val durationStr = split.getOrNull(2) ?: return null
-                val duration = runCatching { Duration.parse(durationStr) }.getOrElse { return null }
+                val duration = TimeUtils.parseDuration(durationStr) ?: return null
                 if ("greater" == op) return playTime.greater(duration)
                 if ("less" == op) return playTime.less(duration)
                 if ("between" == op) {
                     val durationStr2 = split.getOrNull(3) ?: return null
-                    val duration2 = runCatching { Duration.parse(durationStr2) }.getOrElse { return null }
+                    val duration2 = TimeUtils.parseDuration(durationStr2) ?: return null
                     return playTime.between(duration, duration2)
                 }
             }
@@ -122,7 +164,7 @@ object PlayerTimes : IntIdTable() {
             build = OpBuilder(PlayerTimes.player eq player.uniqueId)
         }
         for (arg in args) {
-            val split = arg.removePrefix("--").split(':', limit = 2)
+            val split = arg.removePrefix("--").split(',', limit = 2)
             //默认and
             var ex: Op<Boolean>? = null
             var op = "and"

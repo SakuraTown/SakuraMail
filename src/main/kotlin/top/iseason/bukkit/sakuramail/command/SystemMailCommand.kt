@@ -119,9 +119,9 @@ object SystemMailUploadCommand : CommandNode(
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
         runCatching { SystemMailsYml.upload() }.getOrElse {
             it.printStackTrace()
-            throw ParmaException("&c数据上传异常!")
+            throw ParmaException("&cSystemMail数据上传异常!")
         }
-        it.sendColorMessages("&a数据上传成功!")
+        it.sendColorMessages("&aSystemMail数据上传成功!")
         true
     }
 }
@@ -135,9 +135,9 @@ object SystemMailDownloadCommand : CommandNode(
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
         runCatching { SystemMailsYml.downloadFromDatabase() }.getOrElse {
             it.printStackTrace()
-            throw ParmaException("&c数据下载异常!")
+            throw ParmaException("&cSystemMail数据下载异常!")
         }
-        it.sendColorMessages("&a数据下载成功!")
+        it.sendColorMessages("&aSystemMail数据下载成功!")
         true
     }
 }

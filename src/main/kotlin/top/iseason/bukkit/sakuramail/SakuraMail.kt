@@ -34,6 +34,7 @@ object SakuraMail : KotlinPlugin() {
         SimpleLogger.isDebug = true
         DatabaseConfig.load(false)
         DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
+
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
         MailSendersYml.load(false)

@@ -23,6 +23,7 @@ object SenderCreateCommand : CommandNode(
     name = "create",
     description = "创建邮件发送者",
     default = PermissionDefault.OP,
+    async = true,
     params = arrayOf(
         Param("[id]"),
         Param("[type]", listOf("login", "onTime", "period", "manual")),
@@ -47,6 +48,7 @@ object SenderRemoveCommand : CommandNode(
     name = "remove",
     description = "删除邮件发送者",
     default = PermissionDefault.OP,
+    async = true,
     params = arrayOf(
         Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
     )
@@ -60,3 +62,56 @@ object SenderRemoveCommand : CommandNode(
         true
     }
 }
+
+object SenderSendCommand : CommandNode(
+    name = "send",
+    description = "手动发送一封邮件,login类型的无效",
+    default = PermissionDefault.OP,
+    async = true,
+    params = arrayOf(
+        Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
+    )
+) {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+        val id = getParam<String>(0)
+        val sender = MailSendersYml.getSender(id) ?: throw ParmaException("&cID不存在!")
+        if (sender.type.lowercase() == "login") throw ParmaException("&clogin类型的邮件无法手动触发!")
+        sender.onSend(sender.getAllReceivers(sender.receivers), it)
+        it.sendColorMessages("&a创建成功，细节请前往配置文件修改!")
+        MailSendersYml.saveAll()
+        true
+    }
+}
+
+object SenderUploadCommand : CommandNode(
+    name = "upload",
+    description = "上传邮件发送者到数据库",
+    default = PermissionDefault.OP,
+    async = true
+) {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+        runCatching {
+            MailSendersYml.upload()
+        }.getOrElse { throw ParmaException("&cMailSender数据上传异常!") }
+        it.sendColorMessages("&aMailSender数据上传成功!")
+        MailSendersYml.saveAll()
+        true
+    }
+}
+
+object SenderDownloadCommand : CommandNode(
+    name = "download",
+    description = "从数据库下载邮件发送者到本地",
+    default = PermissionDefault.OP,
+    async = true
+) {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+        runCatching {
+            MailSendersYml.download()
+        }.getOrElse { throw ParmaException("&cMailSender数据下载失异常!") }
+        it.sendColorMessages("&aMailSender数据下载成功!")
+        MailSendersYml.saveAll()
+        true
+    }
+}
+
