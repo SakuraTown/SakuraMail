@@ -17,6 +17,7 @@ import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.MailRecord
+import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.MailSender
 import top.iseason.bukkit.sakuramail.database.MailSenders
 import java.time.Duration
@@ -208,19 +209,23 @@ class MailSenderYml(
         if (!DatabaseConfig.isConnected) {
             sender.sendColorMessages("&c邮件 ${id} 发送失败，数据库未链接!")
         }
-        if (mails.isEmpty()) return
+        if (mails.isEmpty()) {
+            sender.sendColorMessages("&6没有要发送的邮件!")
+            return
+        }
         transaction {
             for (m in mails) {
                 if (receivers.isEmpty()) continue
                 for (receiver in receivers) {
-                    MailRecord.new {
+                    val new = MailRecord.new {
                         player = receiver
                         mail = m.id
                         sendTime = LocalDateTime.now()
                     }
+                    MailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
                 }
                 sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")
-                debug("&a已发送&6 ${m.id} ${receivers.size} &a份!")
+                debug("&6已发送&6 ${m.id} ${receivers.size} &a份!")
             }
         }
     }

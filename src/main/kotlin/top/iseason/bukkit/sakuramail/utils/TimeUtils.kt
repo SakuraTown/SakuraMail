@@ -1,8 +1,6 @@
 package top.iseason.bukkit.sakuramail.utils
 
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 
 object TimeUtils {
@@ -19,7 +17,7 @@ object TimeUtils {
      * 2022-08-24
      * 2022-08-24T12:00:00
      * P1DT2H ->以当前时间点为基准
-     * RPT2H  ->以当日0点为基准
+     * DPT2H  ->以当日0点为基准
      */
     fun parseTime(str: String): LocalDateTime =
         runCatching {
@@ -28,9 +26,28 @@ object TimeUtils {
             runCatching {
                 LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             }.getOrElse {
-                if (str.startsWith("R", true))
-                    parseRelativeTime(str.drop(1), LocalDate.now().atTime(0, 0))
-                else parseRelativeTime(str.drop(1))
+                val anchor = when (str.first().lowercase()) {
+                    "h" -> LocalDate.now().atTime(LocalTime.now().hour, 0)
+                    "d" -> {
+                        LocalDate.now().atStartOfDay()
+                    }
+
+                    "w" -> {
+                        val dayOfWeek = LocalDate.now().dayOfWeek
+                        if (dayOfWeek == DayOfWeek.SUNDAY) LocalDate.now().atStartOfDay()
+                        else LocalDate.now().minusDays(dayOfWeek.value.toLong()).atStartOfDay()
+                    }
+
+                    "m" -> {
+                        val now = LocalDate.now()
+                        LocalDate.of(now.year, now.month, 1).atStartOfDay()
+                    }
+
+                    else -> {
+                        LocalDateTime.now()
+                    }
+                }
+                parseRelativeTime(str.drop(1), anchor)
             }
         }
 

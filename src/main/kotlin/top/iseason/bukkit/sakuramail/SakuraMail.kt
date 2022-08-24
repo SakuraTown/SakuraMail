@@ -7,11 +7,14 @@ import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.info
+import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.sakuramail.command.command
+import top.iseason.bukkit.sakuramail.config.MailBoxGUIConfig
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
 import top.iseason.bukkit.sakuramail.config.MailSendersYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
 import top.iseason.bukkit.sakuramail.database.*
+import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
 import java.io.File
 import java.io.FileInputStream
@@ -32,19 +35,20 @@ object SakuraMail : KotlinPlugin() {
 
     override fun onAsyncEnable() {
         SimpleLogger.isDebug = true
+        PlaceHolderHook
         DatabaseConfig.load(false)
         DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
-
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
         MailSendersYml.load(false)
+        MailBoxGUIConfig.load(false)
         registerListeners(PlayerListener)
-
+        registerListeners(UIListener)
+        command()
+        CommandBuilder.updateCommands()
         runCatching {
             Bukkit.getOnlinePlayers().forEach { PlayerListener.onLogin(it) }
         }.getOrElse { it.printStackTrace() }
-        command()
-        CommandBuilder.updateCommands()
     }
 
     override fun onDisable() {

@@ -18,6 +18,7 @@ import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.bukkittemplate.utils.toColor
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
+import top.iseason.bukkit.sakuramail.database.MailRecords
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.database.SystemMails.has
 import top.iseason.bukkit.sakuramail.utils.IOUtils.onItemInput
@@ -98,6 +99,7 @@ object SystemMailURemoveCommand : CommandNode(
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
         val param = getParam<String>(0)
         val result = transaction {
+            MailRecords.deleteWhere(1) { MailRecords.mail eq param }
             SystemMails.deleteWhere(1) { SystemMails.id eq param }
         }
         if (result == 0 && SystemMailsYml.mails.remove(param) == null)

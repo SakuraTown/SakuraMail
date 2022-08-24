@@ -77,8 +77,7 @@ object SenderSendCommand : CommandNode(
         val sender = MailSendersYml.getSender(id) ?: throw ParmaException("&cID不存在!")
         if (sender.type.lowercase() == "login") throw ParmaException("&clogin类型的邮件无法手动触发!")
         sender.onSend(sender.getAllReceivers(sender.receivers), it)
-        it.sendColorMessages("&a创建成功，细节请前往配置文件修改!")
-        MailSendersYml.saveAll()
+        it.sendColorMessages("&a发送成功!")
         true
     }
 }

@@ -1,8 +1,10 @@
 package top.iseason.bukkit.sakuramail.command
 
+import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionDefault
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.commandRoot
+import top.iseason.bukkit.sakuramail.ui.MailBoxContainer
 
 fun command() {
     commandRoot(
@@ -78,6 +80,18 @@ fun command() {
                         ReceiverDownloadCommand.onExecute?.invoke(this, it)
                     }
                 }
+                true
+            }
+        }
+        node(
+            "open",
+            description = "打开邮箱",
+            async = true,
+            isPlayerOnly = true
+        ) {
+            onExecute {
+                val player = it as Player
+                MailBoxContainer(player).openFor(player)
                 true
             }
         }

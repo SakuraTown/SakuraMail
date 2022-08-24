@@ -1,7 +1,7 @@
 package top.iseason.bukkit.sakuramail.config
 
+import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
@@ -159,7 +159,7 @@ data class SystemMailYml(
     fun toSection(): ConfigurationSection {
         val section = YamlConfiguration()
         section["id"] = id
-        section["icon"] = icon
+        section["icon"] = XItemStack.serialize(icon)
         section["title"] = title
         if (items.isNotEmpty()) {
             section["items"] = ItemUtils.toBase64(items)
@@ -208,7 +208,8 @@ data class SystemMailYml(
          */
         fun of(section: ConfigurationSection): SystemMailYml? {
             val id = section.getString("id") ?: return null
-            val icon = section.getItemStack("icon") ?: ItemStack(Material.STONE)
+            val iconSection = section.getConfigurationSection("icon") ?: YamlConfiguration()
+            val icon = XItemStack.deserialize(iconSection)
             val title = section.getString("title") ?: ""
             val systemMailYml = SystemMailYml(id, icon, title)
             val items = section.getString("items")
@@ -218,9 +219,7 @@ data class SystemMailYml(
                 if (string != null) {
                     for (s in string.split(',')) {
                         runCatching {
-                            fromBase64ToMap[s.toInt()]?.applyMeta {
-                                persistentDataContainer.set(FAKE_ITEM, PersistentDataType.BYTE, 1)
-                            }
+                            fromBase64ToMap[s.toInt()]?.setFakeItem()
                         }
                     }
                 }
@@ -234,6 +233,9 @@ data class SystemMailYml(
          * 检测此Item是否是虚拟物品，将不会给予玩家
          */
         fun ItemStack.isFakeItem() = itemMeta?.persistentDataContainer?.has(FAKE_ITEM, PersistentDataType.BYTE) == true
+        fun ItemStack.setFakeItem() = applyMeta {
+            persistentDataContainer.set(FAKE_ITEM, PersistentDataType.BYTE, 1)
+        }
 
         private val FAKE_ITEM = NamespacedKey(SakuraMail.javaPlugin, "sakura_mail_fake_item")
     }

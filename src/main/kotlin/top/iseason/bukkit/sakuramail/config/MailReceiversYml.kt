@@ -3,7 +3,6 @@ package top.iseason.bukkit.sakuramail.config
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -96,9 +95,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
                 var resultSet = setOf<UUID>()
                 //常规查询
                 if (operation != null) {
-                    var query = PlayerTimes.slice(PlayerTimes.player).select {
-                        if (uuid != null) operation and (PlayerTimes.player eq uuid) else operation
-                    }
+                    var query = PlayerTimes.slice(PlayerTimes.player).select { operation }
                     //限制
                     if (limit != null) query = query.limit(limit)
                     //符合条件的UUID

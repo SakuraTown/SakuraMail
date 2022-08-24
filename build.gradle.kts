@@ -51,6 +51,10 @@ repositories {
         name = "jitpack"
         url = uri("https://jitpack.io")
     }
+    maven {
+        name = "placeholderapi"
+        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    }
 
     mavenLocal()
 }
@@ -63,7 +67,7 @@ dependencies {
 
 //    协程库
 //    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-
+    implementation("org.bstats:bstats-bukkit:3.0.0")
     // 数据库
     compileOnly("org.jetbrains.exposed:exposed-core:$exposedVersion")
     compileOnly("org.jetbrains.exposed:exposed-dao:$exposedVersion")
@@ -71,8 +75,9 @@ dependencies {
     compileOnly("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     compileOnly("com.zaxxer:HikariCP:4.0.3")
     compileOnly("org.quartz-scheduler:quartz:2.3.2")
+    compileOnly("me.clip:placeholderapi:2.11.2")
+    compileOnly("com.github.cryptomorin:XSeries:9.0.0")
 
-    implementation("org.bstats:bstats-bukkit:3.0.0")
     compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
 
 }
@@ -146,10 +151,10 @@ tasks.register<proguard.gradle.ProGuardTask>("buildPlugin") {
     keepclassmembers("class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
     keepclassmembers(allowObf, "class * implements org.bukkit.event.Listener {*;}")
     keepclassmembers("class * extends org.jetbrains.exposed.dao.Entity {*;}")
-    keepclassmembers(
-        allowObf,
-        "class * implements org.bukkit.configuration.serialization.ConfigurationSerializable {*;}"
-    )
+//    keepclassmembers(
+//        allowObf,
+//        "class * implements org.bukkit.configuration.serialization.ConfigurationSerializable {*;}"
+//    )
     keepattributes("Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod")
     keepkotlinmetadata()
     repackageclasses()

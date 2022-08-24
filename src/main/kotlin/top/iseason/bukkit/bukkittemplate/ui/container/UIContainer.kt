@@ -1,7 +1,7 @@
 package top.iseason.bukkit.bukkittemplate.ui.container
 
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.HumanEntity
+import top.iseason.bukkit.bukkittemplate.utils.submit
 
 /**
  * 多页UI
@@ -44,7 +44,10 @@ open class UIContainer(
      */
     open fun nextPage(player: HumanEntity) {
         val next = ((viewers[player] ?: 0) + 1) % size
-        player.openInventory(setPage(next, player)?.inventory ?: return)
+        val inventory = setPage(next, player)?.inventory ?: return
+        submit {
+            player.openInventory(inventory)
+        }
     }
 
     /**
@@ -53,7 +56,10 @@ open class UIContainer(
     open fun lastPage(player: HumanEntity) {
         var last = (viewers[player] ?: 0) - 1
         if (last < 0) last += size
-        player.openInventory(setPage(last, player)?.inventory ?: return)
+        val inventory = setPage(last, player)?.inventory ?: return
+        submit {
+            player.openInventory(inventory)
+        }
     }
 
     /**
@@ -69,40 +75,12 @@ open class UIContainer(
     /**
      * 为某个玩家打开UI
      */
-    fun openFor(player: HumanEntity) {
+    open fun openFor(player: HumanEntity) {
         require(pages.isNotEmpty()) { "Your pageable ui must possess at lease 1 page" }
         val currentPage = getCurrentPage(player) ?: return
         player.openInventory(currentPage.inventory)
     }
 
-    /**
-     * 序列化
-     */
-    open fun serialize(section: ConfigurationSection) {
-        for (page in pages) {
-            if (page == null) continue
-            val sec = section.createSection(page.serializeId)
-            page.getUI().serialize(sec)
-        }
-    }
-
-
-    /**
-     * 反序列化
-     */
-    open fun deserialize(section: ConfigurationSection): UIContainer {
-        val listOf = mutableListOf<Pageable>()
-        for (serializeId in section.getKeys(false)) {
-            val find = pages.find { serializeId == it?.serializeId } ?: continue
-            val configurationSection = section.getConfigurationSection(serializeId) ?: continue
-            val deserialize = find.getUI().deserialize(configurationSection) ?: continue
-            deserialize.serializeId = serializeId
-            listOf.add(deserialize)
-        }
-        val uiContainer = UIContainer(listOf.toTypedArray())
-        uiContainer.onPageChanged = onPageChanged
-        return uiContainer
-    }
 
     /**
      * 复制
