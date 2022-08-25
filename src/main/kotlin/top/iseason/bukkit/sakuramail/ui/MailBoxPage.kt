@@ -7,7 +7,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
-import top.iseason.bukkit.sakuramail.config.MailBoxGUIConfig
+import top.iseason.bukkit.bukkittemplate.utils.submit
+import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
@@ -18,17 +19,24 @@ class MailBoxPage(
     val mailCache: PlayerMailRecordCaches = MailRecordCaches.getPlayerCache(player)
 ) : ChestUI(
     PlaceHolderHook.setPlaceHolder(
-        MailBoxGUIConfig.title
+        MailBoxGUIYml.title
             .replace("%sakura_mail_current_page%", (page + 1).toString())
             .replace("%sakura_mail_total_page%", mailCache.page.toString()), player
-    ), row = MailBoxGUIConfig.row,
+    ), row = MailBoxGUIYml.row,
     clickDelay = 500L
 ) {
     private var mails = mailCache.getCache(page)
+    private var mailIndex = mutableMapOf<Int, Int>()
+
     private val icon = Icon(ItemStack(Material.AIR), 0)
 
     private val mail = Button(ItemStack(Material.AIR), 0).serializeId("mail").onClicked(true) {
-        println("open mail")
+        val mailIndex = mailIndex[index] ?: return@onClicked
+        val mailRecordCache = mails?.getOrNull(mailIndex) ?: return@onClicked
+        val build = MailContent(player, mailRecordCache, this@MailBoxPage).build()
+        submit {
+            player.openInventory(build)
+        }
     }
     private val nextPage = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
         this.getContainer()?.nextPage(player)
@@ -53,6 +61,7 @@ class MailBoxPage(
         var count = 0
         transaction {
             for (mail in mails!!) {
+                if (!mail.canGetKit()) continue
                 if (!mail.getKitSliently()) {
                     player.sendColorMessages("&c背包空间不足!")
                     break
@@ -60,17 +69,21 @@ class MailBoxPage(
                 count++
             }
         }
+        if (count == 0) {
+            player.sendColorMessages("&6没有可领取的邮件!")
+            return@onClicked
+        }
         updateMails()
         player.sendColorMessages("&a已领取 &6$count &a个邮件!")
     }
 
     init {
-        setUpSlots(icon, MailBoxGUIConfig.icons)
-        setUpSlots(nextPage, MailBoxGUIConfig.nextPage)
-        setUpSlots(lastPage, MailBoxGUIConfig.lastPage)
-        setUpSlots(mail, MailBoxGUIConfig.mails)
-        setUpSlots(getAll, MailBoxGUIConfig.getAll)
-        setUpSlots(clear, MailBoxGUIConfig.clearAccepted)
+        setUpSlots(icon, MailBoxGUIYml.icons)
+        setUpSlots(nextPage, MailBoxGUIYml.nextPage)
+        setUpSlots(lastPage, MailBoxGUIYml.lastPage)
+        setUpSlots(mail, MailBoxGUIYml.mails)
+        setUpSlots(getAll, MailBoxGUIYml.getAll)
+        setUpSlots(clear, MailBoxGUIYml.clearAccepted)
         updateMails()
     }
 
@@ -91,9 +104,11 @@ class MailBoxPage(
     }
 
 
-    private fun updateMails() {
+    fun updateMails() {
         mails = mailCache.getCache(page)
+        mailIndex.clear()
         val iterator = mails?.iterator()
+        var index = 0
         slots.forEach {
             if ("mail" != it?.serializeId) return@forEach
             if (it !is Button) return@forEach
@@ -101,13 +116,15 @@ class MailBoxPage(
                 val stack = iterator.next().icon
                 it.rawItemStack = stack
                 it.itemStack = stack
+                mailIndex[it.index] = index
+                index++
             } else {
                 it.rawItemStack = null
                 it.itemStack = null
             }
+
         }
         player.updateInventory()
-
     }
 
 }

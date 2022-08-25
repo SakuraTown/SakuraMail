@@ -2,6 +2,7 @@ package top.iseason.bukkit.sakuramail.database
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.javatime.duration
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.StringEntity
@@ -37,6 +38,11 @@ object SystemMails : StringIdTable() {
     val commands = text("commands").nullable()
 
     /**
+     * 有效时间
+     */
+    val expire = duration("expire").nullable()
+
+    /**
      * 判断Table是否有某个id的记录
      */
     fun <T : Comparable<T>> IdTable<T>.has(id: T): Boolean {
@@ -59,6 +65,7 @@ class SystemMail(
     var title by SystemMails.title
     var items by SystemMails.items
     var commands by SystemMails.commands
+    var expire by SystemMails.expire
 
     /**
      * 转为yml本地对象
@@ -70,6 +77,9 @@ class SystemMail(
         }
         if (commands != null) {
             systemMailYml.commands = commands!!.split(";").toMutableList()
+        }
+        if (expire != null) {
+            systemMailYml.expire = expire
         }
         return systemMailYml
     }

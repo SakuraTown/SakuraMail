@@ -2,6 +2,7 @@ package top.iseason.bukkit.sakuramail.utils
 
 import java.time.*
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 object TimeUtils {
 
@@ -55,4 +56,17 @@ object TimeUtils {
      * 格式化时间间隔
      */
     fun parseDuration(str: String): Duration? = runCatching { Duration.parse(str) }.getOrNull()
+
+    fun formatDuration(duration: Duration): String {
+        val seconds = duration.seconds
+        val absSeconds = abs(seconds)
+        val positive = String.format(
+            "%d 天 %02d 时 %02d 分 %02d 秒",
+            absSeconds / 86400,
+            absSeconds % 86400 / 3600,
+            absSeconds % 3600 / 60,
+            absSeconds % 60
+        )
+        return if (seconds < 0) "-$positive" else positive
+    }
 }

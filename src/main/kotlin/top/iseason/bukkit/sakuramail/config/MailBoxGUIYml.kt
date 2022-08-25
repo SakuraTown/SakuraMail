@@ -3,6 +3,8 @@ package top.iseason.bukkit.sakuramail.config
 import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.configuration.MemorySection
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
@@ -10,13 +12,31 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 
 @FilePath("ui/mailbox.yml")
-object MailBoxGUIConfig : SimpleYAMLConfig() {
+object MailBoxGUIYml : SimpleYAMLConfig() {
 
     @Key
     var title = "&a我的邮箱"
 
     @Key
     var row = 6
+
+    @Key("icons")
+    var iconSection: MemorySection = YamlConfiguration()
+
+    @Key("mails")
+    var mailSection: MemorySection = YamlConfiguration()
+
+    @Key("nextPages")
+    var nextPageSection: MemorySection = YamlConfiguration()
+
+    @Key("lastPages")
+    var lastPageSection: MemorySection = YamlConfiguration()
+
+    @Key("getAlls")
+    var getAllSection: MemorySection = YamlConfiguration()
+
+    @Key("clearAccepted")
+    var clearAcceptedSection: MemorySection = YamlConfiguration()
 
     var icons = mutableMapOf<ItemStack, List<Int>>()
     var mails = mutableMapOf<ItemStack, List<Int>>()
@@ -27,12 +47,12 @@ object MailBoxGUIConfig : SimpleYAMLConfig() {
 
     var pageMailSize = mails.values.sumOf { it.size }
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
-        icons = readSlots(config.getConfigurationSection("icons"))
-        mails = readSlots(config.getConfigurationSection("mails"))
-        nextPage = readSlots(config.getConfigurationSection("nextPages"))
-        lastPage = readSlots(config.getConfigurationSection("lastPages"))
-        getAll = readSlots(config.getConfigurationSection("getAlls"))
-        clearAccepted = readSlots(config.getConfigurationSection("clearAccepted"))
+        icons = readSlots(iconSection)
+        mails = readSlots(mailSection)
+        nextPage = readSlots(nextPageSection)
+        lastPage = readSlots(lastPageSection)
+        getAll = readSlots(getAllSection)
+        clearAccepted = readSlots(clearAcceptedSection)
         test()
         pageMailSize = mails.values.sumOf { it.size }
     }
@@ -52,7 +72,7 @@ object MailBoxGUIConfig : SimpleYAMLConfig() {
         return mutableMapOf
     }
 
-    fun test() {
+    private fun test() {
         mails[ItemStack(Material.AIR)] = (0..row * 9 - 10).toList()
         lastPage[ItemStack(Material.PAPER).applyMeta { setDisplayName("上一页") }] = listOf(45)
         nextPage[ItemStack(Material.PAPER).applyMeta { setDisplayName("下一页") }] = listOf(46)

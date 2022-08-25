@@ -9,10 +9,7 @@ import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.sakuramail.command.command
-import top.iseason.bukkit.sakuramail.config.MailBoxGUIConfig
-import top.iseason.bukkit.sakuramail.config.MailReceiversYml
-import top.iseason.bukkit.sakuramail.config.MailSendersYml
-import top.iseason.bukkit.sakuramail.config.SystemMailsYml
+import top.iseason.bukkit.sakuramail.config.*
 import top.iseason.bukkit.sakuramail.database.*
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
@@ -41,7 +38,8 @@ object SakuraMail : KotlinPlugin() {
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
         MailSendersYml.load(false)
-        MailBoxGUIConfig.load(false)
+        MailBoxGUIYml.load(false)
+        MailContentYml.load(false)
         registerListeners(PlayerListener)
         registerListeners(UIListener)
         command()

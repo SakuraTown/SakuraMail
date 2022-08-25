@@ -21,6 +21,7 @@ import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.SystemMail
 import top.iseason.bukkit.sakuramail.database.SystemMails
+import java.time.Duration
 
 @FilePath("mails.yml")
 object SystemMailsYml : SimpleYAMLConfig() {
@@ -66,6 +67,9 @@ object SystemMailsYml : SimpleYAMLConfig() {
                     if (value.commands.isNotEmpty()) {
                         this.commands = value.commands.joinToString(";")
                     }
+                    if (value.expire != null) {
+                        this.expire = value.expire
+                    }
                 }
             }
         }
@@ -104,7 +108,8 @@ data class SystemMailYml(
     var icon: ItemStack,
     var title: String,
     var items: MutableMap<Int, ItemStack> = mutableMapOf(),
-    var commands: MutableList<String> = mutableListOf()
+    var commands: MutableList<String> = mutableListOf(),
+    var expire: Duration? = null
 ) {
     /**
      * 将礼包给予玩家
@@ -161,6 +166,7 @@ data class SystemMailYml(
         section["id"] = id
         section["icon"] = XItemStack.serialize(icon)
         section["title"] = title
+        section["expire"] = expire
         if (items.isNotEmpty()) {
             section["items"] = ItemUtils.toBase64(items)
             section["fakeItems"] = items.mapNotNull {
@@ -199,6 +205,9 @@ data class SystemMailYml(
         if (this@SystemMailYml.commands.isNotEmpty()) {
             this.commands = this@SystemMailYml.commands.joinToString(";")
         }
+        if (this@SystemMailYml.expire != null) {
+            this.expire = this@SystemMailYml.expire
+        }
     }
 
     companion object {
@@ -212,6 +221,7 @@ data class SystemMailYml(
             val icon = XItemStack.deserialize(iconSection)
             val title = section.getString("title") ?: ""
             val systemMailYml = SystemMailYml(id, icon, title)
+            systemMailYml.expire = runCatching { Duration.parse(section.getString("expire") ?: "") }.getOrNull()
             val items = section.getString("items")
             if (items != null) {
                 val fromBase64ToMap = ItemUtils.fromBase64ToMap(items)

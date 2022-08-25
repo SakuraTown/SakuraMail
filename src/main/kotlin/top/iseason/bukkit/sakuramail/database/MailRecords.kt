@@ -12,10 +12,12 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
-import top.iseason.bukkit.sakuramail.config.MailBoxGUIConfig
+import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
+import top.iseason.bukkit.sakuramail.utils.TimeUtils
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -51,8 +53,11 @@ class MailRecord(id: EntityID<Int>) : IntEntity(id) {
     var acceptTime by MailRecords.acceptTime
 
     companion object : IntEntityClass<MailRecord>(MailRecords)
+
+
 }
 
+//TODO: 设置玩家ui缓存
 object MailRecordCaches {
     private val playerCaches = mutableMapOf<UUID, PlayerMailRecordCaches>()
 
@@ -75,7 +80,7 @@ class PlayerMailRecordCaches(val player: Player) {
     /**
      * 规划好的页面
      */
-    var pages = records.sortedByDescending { it.sendTime }.chunked(MailBoxGUIConfig.pageMailSize)
+    var pages = records.sortedByDescending { it.sendTime }.chunked(MailBoxGUIYml.pageMailSize)
 
     //页数
     var page = if (pages.isEmpty()) 1 else pages.size
@@ -104,7 +109,7 @@ class PlayerMailRecordCaches(val player: Player) {
     }
 
     fun update() {
-        pages = records.sortedByDescending { it.sendTime }.chunked(MailBoxGUIConfig.pageMailSize)
+        pages = records.sortedByDescending { it.sendTime }.chunked(MailBoxGUIYml.pageMailSize)
         page = if (pages.isEmpty()) 1 else pages.size
     }
 
@@ -115,7 +120,7 @@ class MailRecordCache(
     val player: Player
 ) {
     lateinit var icon: ItemStack
-    lateinit var title: String
+    var expireStr = ""
     val mailYml by lazy { getYml() }
 
     init {
@@ -151,6 +156,7 @@ class MailRecordCache(
         } else {
             player.sendColorMessages("&a领取成功")
             setAccepted()
+            setIconAndTitle()
             return true
         }
     }
@@ -159,16 +165,28 @@ class MailRecordCache(
      * 领取邮件
      */
     fun getKitSliently(): Boolean {
-        return if (!canGetKit()) true
-        else if (!mailYml.apply(player)) {
+        return if (!mailYml.apply(player)) {
             false
         } else {
             setAccepted()
+            setIconAndTitle()
             true
         }
     }
 
-    fun canGetKit(): Boolean = record.acceptTime == null
+    /**
+     * 检查领取邮件的必要条件
+     * @return true 表示可以领取
+     */
+    fun canGetKit(): Boolean {
+        // 是否领取
+        if (record.acceptTime != null) return false
+        // 检查过期
+        if (mailYml.expire != null && record.sendTime.plus(mailYml.expire).isAfter(LocalDateTime.now())) {
+            return false
+        }
+        return true
+    }
 
     private fun getYml(): SystemMailYml {
         val yml = SystemMailsYml.getMailYml(record.mail)!!
@@ -177,7 +195,7 @@ class MailRecordCache(
         val copy = yml.copy(
             id = record.mail,
             icon = icon,
-            title = title,
+            title = PlaceHolderHook.setPlaceHolder(yml.title, player),
             items = mutableMapOf,
             commands = yml.commands.map { PlaceHolderHook.setPlaceHolder(it, player) }.toMutableList()
         )
@@ -185,36 +203,48 @@ class MailRecordCache(
     }
 
     fun setIconAndTitle() {
-        transaction {
-            val systemMailYml = SystemMailsYml.getMailYml(record.mail)!!
-            val itemStack = systemMailYml.icon.clone()
-
-            itemStack.applyMeta {
-                if (hasDisplayName())
-                    setDisplayName(setPlaceHolder(displayName))
-                if (hasLore())
-                    lore = lore!!.map { setPlaceHolder(it) }
-            }
-            icon = PlaceHolderHook.setPlaceHolder(itemStack, player)
-            //未领取的发光
-            if (record.acceptTime == null) {
-                icon.setGlow()
-            }
-            title = PlaceHolderHook.setPlaceHolder(systemMailYml.title, player)
+        val systemMailYml = SystemMailsYml.getMailYml(record.mail)!!
+        val itemStack = systemMailYml.icon.clone()
+        expireStr = getExpireStr(systemMailYml.expire)
+        itemStack.applyMeta {
+            if (hasDisplayName())
+                setDisplayName(setPlaceHolder(displayName))
+            if (hasLore())
+                lore = lore!!.map { setPlaceHolder(it) }
         }
+        icon = PlaceHolderHook.setPlaceHolder(itemStack, player)
+        //未领取的发光
+        if (record.acceptTime == null) {
+            icon.setGlow()
+        }
+
     }
 
+    /**
+     * 设置插件自带的占位符
+     */
     private fun setPlaceHolder(str: String): String {
         var temp = str
-        temp =
-            temp.replace("%sakura_mail_sendtime%", record.sendTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), true)
-        temp = temp.replace(
+        if (temp.contains("%sakura_mail_expire%")) {
+            temp = temp.replace("%sakura_mail_expire%", expireStr, true)
+        }
+        return temp.replace(
+            "%sakura_mail_sendtime%",
+            record.sendTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            true
+        ).replace(
             "%sakura_mail_accepttime%",
             record.acceptTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: "未领取",
             true
-        )
-        temp = temp.replace("%sakura_mail_id%", record.mail, true)
-        return temp
+        ).replace("%sakura_mail_id%", record.mail, true)
+
+    }
+
+    fun getExpireStr(expire: Duration?): String {
+        if (expire == null) return "无限"
+        val between = Duration.between(LocalDateTime.now(), record.sendTime.plus(expire))
+        if (between.isNegative) return "已到期"
+        return TimeUtils.formatDuration(between)
     }
 
     private fun ItemStack.setGlow(glow: Boolean = true) {
