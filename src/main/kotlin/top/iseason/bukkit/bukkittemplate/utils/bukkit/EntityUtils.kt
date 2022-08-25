@@ -1,6 +1,7 @@
 package top.iseason.bukkit.bukkittemplate.utils.bukkit
 
 
+import org.bukkit.Bukkit
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Item
@@ -51,4 +52,14 @@ fun PlayerInventory.getHeldItem(): ItemStack? {
     val item = getItem(heldItemSlot)
     if (item == null || item.type.checkAir()) return null
     return item
+}
+
+/**
+ * 是否能添加物品，返回溢出的物品数量
+ */
+fun PlayerInventory.canAddItem(vararg itemStacks: ItemStack): Int {
+    val createInventory = Bukkit.createInventory(null, 36)
+    createInventory.contents = storageContents
+    val addItems = createInventory.addItem(*itemStacks)
+    return addItems.size
 }

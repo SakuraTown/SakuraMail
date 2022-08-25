@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
+import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.info
@@ -21,12 +22,15 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var guiCaches = mutableMapOf<UUID, MailBoxContainer>()
 
     @Key
-    var title = "&a我的邮箱"
+    @Comment("", "邮箱的标题")
+    var title = "&a我的邮箱 %sakura_mail_current_page% / %sakura_mail_total_page%"
 
     @Key
+    @Comment("", "邮箱的行数")
     var row = 6
 
     @Key("icons")
+    @Comment("", "展示的图标，占位美化用")
     var iconSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "47,48,49,50")
         set(
@@ -36,6 +40,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     }
 
     @Key("mails")
+    @Comment("", "邮件应该显示的位置，item可以不写")
     var mailSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", (0..row * 9 - 10).joinToString(",") { it.toString() })
         set(
@@ -45,6 +50,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     }
 
     @Key("nextPages")
+    @Comment("", "下一页按钮")
     var nextPageSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "46")
         set(
@@ -54,6 +60,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     }
 
     @Key("lastPages")
+    @Comment("", "上一页按钮")
     var lastPageSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "45")
         set(
@@ -63,6 +70,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     }
 
     @Key("getAlls")
+    @Comment("", "领取全部按钮")
     var getAllSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "52")
         set(
@@ -72,6 +80,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     }
 
     @Key("clearAccepted")
+    @Comment("", "清除未领取的邮件")
     var clearAcceptedSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "53")
         set(

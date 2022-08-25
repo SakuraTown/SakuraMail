@@ -15,7 +15,7 @@ import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.checkAir
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.canAddItem
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
@@ -117,8 +117,8 @@ data class SystemMailYml(
      */
     fun apply(player: Player): Boolean {
         val filter = items.values.filter { !it.isFakeItem() }
-        val emptySlot = player.openInventory.bottomInventory.filter { it == null || it.type.checkAir() }.count()
-        if (filter.size > emptySlot) return false
+        val canAddItem = player.inventory.canAddItem(*filter.toTypedArray())
+        if (canAddItem > 0) return false
         player.giveItems(filter)
         submit {
             for (command in commands) {
