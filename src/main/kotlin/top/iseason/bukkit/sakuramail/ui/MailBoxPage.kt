@@ -6,8 +6,10 @@ import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
+import top.iseason.bukkit.bukkittemplate.utils.formatBy
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.submit
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
@@ -54,7 +56,7 @@ class MailBoxPage(
             }
         }
         updateMails()
-        player.sendColorMessages("&a清除成功!")
+        player.sendColorMessages(Lang.ui_clear_success)
     }
     private val getAll = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
         if (mails == null) return@onClicked
@@ -63,18 +65,18 @@ class MailBoxPage(
             for (mail in mails!!) {
                 if (!mail.canGetKit()) continue
                 if (!mail.getKitSliently()) {
-                    player.sendColorMessages("&c背包空间不足!")
+                    player.sendColorMessages(Lang.ui_getAll_no_space)
                     break
                 }
                 count++
             }
         }
         if (count == 0) {
-            player.sendColorMessages("&6没有可领取的邮件!")
+            player.sendColorMessages(Lang.ui_getAll_no_mail)
             return@onClicked
         }
         updateMails()
-        player.sendColorMessages("&a已领取 &6$count &a个邮件!")
+        player.sendColorMessages(Lang.ui_getAll_success.formatBy(count))
     }
 
     init {

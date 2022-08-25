@@ -8,7 +8,9 @@ import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
+import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailSenderYml
 import top.iseason.bukkit.sakuramail.config.MailSendersYml
 import top.iseason.bukkit.sakuramail.database.MailSenders
@@ -53,7 +55,11 @@ object SenderRemoveCommand : CommandNode(
         Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
     )
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val id = getParam<String>(0)
         if (transaction { MailSenders.deleteWhere { MailSenders.id eq id } } == 0 && MailSendersYml.senders.remove(id) == null)
             it.sendColorMessages("&cID不存在!")
@@ -72,7 +78,11 @@ object SenderSendCommand : CommandNode(
         Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
     )
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val id = getParam<String>(0)
         val sender = MailSendersYml.getSender(id) ?: throw ParmaException("&cID不存在!")
         if (sender.type.lowercase() == "login") throw ParmaException("&clogin类型的邮件无法手动触发!")
@@ -88,7 +98,11 @@ object SenderUploadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         runCatching {
             MailSendersYml.upload()
         }.getOrElse { throw ParmaException("&cMailSender数据上传异常!") }
@@ -104,7 +118,11 @@ object SenderDownloadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         runCatching {
             MailSendersYml.download()
         }.getOrElse { throw ParmaException("&cMailSender数据下载失异常!") }

@@ -32,10 +32,15 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     @Key("icons")
     @Comment("", "展示的图标，占位美化用")
     var iconSection: MemorySection = YamlConfiguration().apply {
-        set("1.slots", "47,48,49,50")
+        set("1.slots", "47,48,50,51")
         set(
             "1.item",
             XItemStack.serialize(ItemStack(Material.GRAY_STAINED_GLASS_PANE).applyMeta { setDisplayName("") })
+        )
+        set("2.slots", "49")
+        set(
+            "2.item",
+            XItemStack.serialize(ItemStack(Material.NETHER_STAR).applyMeta { setDisplayName("你的邮件") })
         )
     }
 
@@ -98,8 +103,12 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var pageMailSize = mails.values.sumOf { it.size }
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
         guiCaches.clear()
-        icons = readSlots(iconSection)
+        readGui()
+    }
+
+    private fun readGui() {
         mails = readSlots(mailSection)
+        icons = readSlots(iconSection)
         nextPage = readSlots(nextPageSection)
         lastPage = readSlots(lastPageSection)
         getAll = readSlots(getAllSection)
@@ -119,11 +128,14 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
                 val slots = (section2.getString("slots") ?: "").trim().split(",").mapNotNull {
                     runCatching { it.toInt() }.getOrNull()
                 }
-                val itemSection = section2.getConfigurationSection("item")
+                val itemSection = section2["item"]
+                val item =
+                    if (itemSection is Map<*, *>) itemSection as Map<String, Any>
+                    else (itemSection as MemorySection).getValues(true)
                 val icon =
-                    if (itemSection == null) ItemStack(Material.AIR) else runCatching {
+                    runCatching {
                         XItemStack.deserialize(
-                            itemSection
+                            item
                         )
                     }.getOrElse {
                         ItemStack(Material.AIR)

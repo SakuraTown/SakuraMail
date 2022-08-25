@@ -146,7 +146,7 @@ tasks.register<proguard.gradle.ProGuardTask>("buildPlugin") {
     //class规则
     keep("class $groupS.libs.core.BukkitTemplate {}")
     keep(allowObf, "class $groupS.libs.core.utils.MessageUtilsKt {*;}")
-    keep(allowObf, "class * implements $groupS.libs.core.KotlinPlugin {*;}")
+    keep("class * implements $groupS.libs.core.KotlinPlugin {*;}")
     keepclassmembers("class * extends $groupS.libs.core.config.SimpleYAMLConfig {*;}")
     keepclassmembers("class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
     keepclassmembers(allowObf, "class * implements org.bukkit.event.Listener {*;}")

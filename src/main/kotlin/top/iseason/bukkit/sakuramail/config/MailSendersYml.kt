@@ -15,6 +15,7 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.MailRecord
 import top.iseason.bukkit.sakuramail.database.MailRecordCaches
@@ -35,7 +36,6 @@ object MailSendersYml : SimpleYAMLConfig() {
     val executor = ScheduledThreadPoolExecutor(3).apply {
         removeOnCancelPolicy = true
     }
-
     val scheduler: Scheduler = StdSchedulerFactory(SakuraMail.loadOrCopyQuartzProperties()).scheduler
     val schedules = mutableListOf<ScheduledFuture<*>>()
     var senders = mutableMapOf<String, MailSenderYml>()
@@ -223,7 +223,7 @@ class MailSenderYml(
                         sendTime = LocalDateTime.now()
                     }
                     MailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
-                    Bukkit.getPlayer(receiver)?.sendColorMessages("&a你有一封新的邮件!")
+                    Bukkit.getPlayer(receiver)?.sendColorMessages(Lang.new_mail)
                 }
                 sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")
                 debug("&6已发送&6 ${m.id} ${receivers.size} &a份!")

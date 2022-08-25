@@ -110,18 +110,18 @@ object PlayerTimes : IntIdTable() {
     /**
      * 解析字符串为sql条件
      * 例子:
-     * loginTime.before.time
-     * quitTime.after.time
-     * loginTime.between.time1.time2
-     * quitTime.between.time1.time2
-     * playTime.greater.time
-     * playTime.less.time
+     * loginTime before time
+     * quitTime after time
+     * loginTime between time1 time2
+     * quitTime between time1 time2
+     * playTime greater time
+     * playTime less time
      * 相对时间为 PnYnMnDTnHnMnS
      * 绝对时间为 2011-12-03T10:15:30
      * playTime 不支持绝对时间
      */
     fun parseOP(str: String): Op<Boolean>? {
-        val split = str.split('_')
+        val split = str.split(' ')
         val type = split.getOrNull(0)?.lowercase() ?: return null
         val op = split.getOrNull(1)?.lowercase() ?: return null
         when (type) {

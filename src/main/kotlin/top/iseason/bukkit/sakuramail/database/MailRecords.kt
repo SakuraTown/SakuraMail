@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
@@ -20,7 +21,6 @@ import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkit.sakuramail.utils.TimeUtils
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 object MailRecords : IntIdTable() {
@@ -150,14 +150,14 @@ class MailRecordCache(
      */
     fun getKit(): Boolean {
         if (!canGetKit()) {
-            player.sendColorMessages("&6该邮件已领取!")
+            player.sendColorMessages(Lang.ui_get_has_accepted)
             return false
         }
         if (!mailYml.apply(player)) {
-            player.sendColorMessages("&6你的背包没有足够的空间!")
+            player.sendColorMessages(Lang.ui_get_no_space)
             return false
         } else {
-            player.sendColorMessages("&a领取成功")
+            player.sendColorMessages(Lang.ui_get_success)
             setAccepted()
             setIconAndTitle()
             return true
@@ -233,11 +233,11 @@ class MailRecordCache(
         }
         return temp.replace(
             "%sakura_mail_sendtime%",
-            record.sendTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            TimeUtils.formatTime(record.sendTime),
             true
         ).replace(
             "%sakura_mail_accepttime%",
-            record.acceptTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: "未领取",
+            if (record.acceptTime == null) "未领取" else TimeUtils.formatTime(record.acceptTime!!),
             true
         ).replace("%sakura_mail_id%", record.mail, true)
 

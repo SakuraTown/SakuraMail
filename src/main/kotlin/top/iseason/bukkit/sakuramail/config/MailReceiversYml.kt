@@ -83,8 +83,8 @@ object MailReceiversYml : SimpleYAMLConfig() {
                 temp[index] = param.replace("%uuid%", player.uniqueId.toString())
                 continue
             }
-            if (param.startsWith("limit_")) {
-                limit = runCatching { param.removePrefix("limit_").toInt() }.getOrNull()
+            if (param.startsWith("limit")) {
+                limit = runCatching { param.removePrefix("limit").toInt() }.getOrNull()
             }
         }
         val uuid: UUID? = player?.uniqueId
@@ -112,7 +112,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
             runCatching {
                 val args = param.removePrefix("--").split(',', limit = 2)
                 val op = if (args.size >= 2) args[0] else "and"
-                val split = args.last().split('_')
+                val split = args.last().split(' ')
                 var duration: Duration? = null
                 var setStr = split[0]
                 //totaltime_greater_PT1H_STime1_ETime2

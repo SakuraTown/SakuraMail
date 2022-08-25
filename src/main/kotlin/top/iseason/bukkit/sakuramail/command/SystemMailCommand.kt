@@ -12,10 +12,12 @@ import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
+import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.getHeldItem
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.bukkittemplate.utils.toColor
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
 import top.iseason.bukkit.sakuramail.database.MailRecords
@@ -37,7 +39,6 @@ object SystemMailCreateCommand : CommandNode(
     async = true
 ) {
     override var onExecute: (Params.(CommandSender) -> Boolean)? = onExecute@{
-
         val id = getParam<String>(0)
         if (SystemMails.has(id)) throw ParmaException("&cid已存在!")
         val title = getOptionalParam<String>(1)?.toColor() ?: ""
@@ -83,6 +84,7 @@ object SystemMailEditCommand : CommandNode(
                 }
                 mailYml.items = mutableMapOf
                 SystemMailsYml.saveToYml()
+                player.sendColorMessages("&a邮件已保存!")
             }
         }
         true
@@ -96,7 +98,11 @@ object SystemMailURemoveCommand : CommandNode(
     params = arrayOf(Param("[id]", suggestRuntime = { SystemMailsYml.mails.keys })),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val param = getParam<String>(0)
         val result = transaction {
             MailRecords.deleteWhere(1) { MailRecords.mail eq param }
@@ -118,9 +124,13 @@ object SystemMailUploadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
-        runCatching { SystemMailsYml.upload() }.getOrElse {
-            it.printStackTrace()
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
+        runCatching { SystemMailsYml.upload() }.getOrElse { error ->
+            error.printStackTrace()
             throw ParmaException("&cSystemMail数据上传异常!")
         }
         it.sendColorMessages("&aSystemMail数据上传成功!")
@@ -134,9 +144,13 @@ object SystemMailDownloadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
-        runCatching { SystemMailsYml.downloadFromDatabase() }.getOrElse {
-            it.printStackTrace()
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
+        runCatching { SystemMailsYml.downloadFromDatabase() }.getOrElse { error ->
+            error.printStackTrace()
             throw ParmaException("&cSystemMail数据下载异常!")
         }
         it.sendColorMessages("&aSystemMail数据下载成功!")

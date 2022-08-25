@@ -7,6 +7,7 @@ import org.bukkit.configuration.MemorySection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
+import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
@@ -15,6 +16,7 @@ import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 object MailContentYml : SimpleYAMLConfig() {
 
     @Key("accept")
+    @Comment("", "领取邮件组件")
     var acceptSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "49")
         set(
@@ -24,6 +26,7 @@ object MailContentYml : SimpleYAMLConfig() {
     }
 
     @Key("back")
+    @Comment("", "返回上一级组件")
     var backSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "46")
         set(
@@ -33,6 +36,7 @@ object MailContentYml : SimpleYAMLConfig() {
     }
 
     @Key("delete")
+    @Comment("", "删除邮件组件")
     var deleteSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "53")
         set(

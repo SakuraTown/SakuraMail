@@ -9,7 +9,9 @@ import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
+import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
 import top.iseason.bukkit.sakuramail.database.MailReceivers
@@ -26,23 +28,23 @@ object ReceiverCommand : CommandNode(
 ) {
     private val op1 = listOf("--and", "--or", "--andNot", "--orNot")
     private val op2 = listOf("loginTime", "quitTime", "totaltime")
-    private val op3 = listOf("before.time", "after.time", "between.time1.time2")
-    private val op4 = listOf("greater.time", "less.time", "between.time1.time2")
-    private val op5 = listOf("online", "offline", "all", "uuids", "names", "permission.xxx", "gamemode.xxx")
+    private val op3 = listOf("before_time", "after_time", "between_time1_time2")
+    private val op4 = listOf("greater_time", "less_time", "between_time1_time2")
+    private val op5 = listOf("online", "offline", "all", "uuids", "names", "permission_xxx", "gamemode_xxx")
     val listOf = mutableListOf<String>()
 
     init {
         for (s1 in op1) {
             for (s2 in op2) {
                 for (s3 in op3) {
-                    listOf.add("$s1:$s2.$s3")
+                    listOf.add("$s1,${s2}_$s3")
                 }
             }
             for (s4 in op4) {
-                listOf.add("$s1:playTime.$s4")
+                listOf.add("$s1,playTime_$s4")
             }
             for (s5 in op5) {
-                listOf.add("$s1:$s5")
+                listOf.add("$s1,$s5")
             }
         }
     }
@@ -68,7 +70,7 @@ object ReceiverAddCommand : CommandNode(
         val id = getParam<String>(0)
         val copyOfRange = params.copyOfRange(1, params.size)
         copyOfRange.forEachIndexed { index, s ->
-            copyOfRange[index] = s.removePrefix("--")
+            copyOfRange[index] = s.removePrefix("--").replace('_', ' ')
         }
         val orDefault = MailReceiversYml.timeReceivers.getOrDefault(id, mutableListOf())
         orDefault.addAll(copyOfRange)
@@ -95,7 +97,7 @@ object ReceiverSetCommand : CommandNode(
         val id = getParam<String>(0)
         val strings = MailReceiversYml.timeReceivers[id] ?: throw ParmaException("&cid不存在!")
         val index = getParam<Int>(1)
-        strings[index] = getParam<String>(2).removePrefix("--")
+        strings[index] = getParam<String>(2).removePrefix("--").replace('_', ' ')
         MailReceiversYml.save()
         it.sendColorMessages("$id 的参数为")
         it.sendColorMessages(strings)
@@ -112,7 +114,11 @@ object ReceiverRemoveCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val id = getParam<String>(0)
         val remove = MailReceiversYml.timeReceivers.remove(id)
         MailReceiversYml.save()
@@ -134,7 +140,11 @@ object ReceiverTestCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val id = getParam<String>(0)
         val receivers = MailReceiversYml.getReceivers(id) ?: throw ParmaException("&cid不存在!")
         if (receivers.isEmpty()) it.sendColorMessages("&6没有符合条件的接收者!")
@@ -163,9 +173,13 @@ object ReceiverExportCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = { it ->
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{ it ->
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         val id = getParam<String>(0)
-        var receivers: List<UUID> =
+        val receivers: List<UUID> =
             MailReceiversYml.getReceivers(id) ?: throw ParmaException("&cid不存在!")
         if (receivers.isEmpty()) it.sendColorMessages("&6没有符合条件的接收者!")
         else it.sendColorMessages("&a找到 ${receivers.size} 个接收者")
@@ -198,7 +212,11 @@ object ReceiverUploadCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         kotlin.runCatching {
             MailReceiversYml.upload()
         }.getOrElse {
@@ -219,7 +237,11 @@ object ReceiverDownloadCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+        if (!DatabaseConfig.isConnected) {
+            it.sendColorMessages(Lang.database_error)
+            return@onExecute true
+        }
         kotlin.runCatching {
             MailReceiversYml.download()
         }.getOrElse {
