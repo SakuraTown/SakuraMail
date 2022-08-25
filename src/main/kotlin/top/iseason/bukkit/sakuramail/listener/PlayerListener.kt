@@ -9,7 +9,9 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.utils.runAsync
+import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.MailSendersYml
+import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.PlayerTime
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
 import java.time.Duration
@@ -57,6 +59,10 @@ object PlayerListener : Listener {
 
     @EventHandler
     fun onPlayerQuitEvent(event: PlayerQuitEvent) {
-        runAsync { onQuit(event.player) }
+        runAsync {
+            onQuit(event.player)
+            MailRecordCaches.remove(event.player)
+            MailBoxGUIYml.guiCaches.remove(event.player.uniqueId)
+        }
     }
 }

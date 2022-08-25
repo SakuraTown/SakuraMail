@@ -139,7 +139,14 @@ fun InventoryDragEvent.ioEvent() {
                 ioSlot.onInput(ioSlot, newItem)
             }
         } else {
-            if (ioSlot == null && !baseUI.lockOnTop) continue
+            if (ioSlot == null) {
+                if (index in 0 until inventory.size && baseUI.lockOnTop) {
+                    debug("ui ${baseUI::class.simpleName} lockup, slot $index")
+                } else if (index > 0 && baseUI.lockOnBottom) {
+                    isCancelled = true
+                    debug("ui ${baseUI::class.simpleName} lockdown, slot $index")
+                } else continue
+            }
             if (tempItem == null) tempItem = newItem.clone()
             else tempItem.merge(newItem)
             val item = view.getItem(index)?.clone()

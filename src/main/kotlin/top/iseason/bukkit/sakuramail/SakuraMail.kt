@@ -53,7 +53,11 @@ object SakuraMail : KotlinPlugin() {
         MailSendersYml.executor.shutdown()
         MailSendersYml.scheduler.shutdown()
         runCatching {
-            Bukkit.getOnlinePlayers().forEach { PlayerListener.onQuit(it) }
+            Bukkit.getOnlinePlayers().forEach {
+                PlayerListener.onQuit(it)
+                MailRecordCaches.remove(it)
+                MailBoxGUIYml.guiCaches.remove(it.uniqueId)
+            }
         }.getOrElse { it.printStackTrace() }
         info("&6插件已卸载! ")
     }

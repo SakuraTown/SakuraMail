@@ -62,6 +62,7 @@ class SystemMail(
     companion object : StringEntityClass<SystemMail>(SystemMails)
 
     var icon by SystemMails.icon
+    var type by SystemMails.type
     var title by SystemMails.title
     var items by SystemMails.items
     var commands by SystemMails.commands
@@ -81,6 +82,7 @@ class SystemMail(
         if (expire != null) {
             systemMailYml.expire = expire
         }
+        systemMailYml.type = type
         return systemMailYml
     }
 

@@ -223,6 +223,7 @@ class MailSenderYml(
                         sendTime = LocalDateTime.now()
                     }
                     MailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
+                    Bukkit.getPlayer(receiver)?.sendColorMessages("&a你有一封新的邮件!")
                 }
                 sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")
                 debug("&6已发送&6 ${m.id} ${receivers.size} &a份!")

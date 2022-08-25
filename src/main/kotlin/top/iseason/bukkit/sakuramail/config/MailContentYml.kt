@@ -1,5 +1,6 @@
 package top.iseason.bukkit.sakuramail.config
 
+import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.MemorySection
@@ -14,28 +15,40 @@ import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 object MailContentYml : SimpleYAMLConfig() {
 
     @Key("accept")
-    var acceptSection: MemorySection = YamlConfiguration()
+    var acceptSection: MemorySection = YamlConfiguration().apply {
+        set("1.slots", "49")
+        set(
+            "1.item",
+            XItemStack.serialize(ItemStack(Material.CHEST).applyMeta { setDisplayName("领取") })
+        )
+    }
 
     @Key("back")
-    var backSection: MemorySection = YamlConfiguration()
+    var backSection: MemorySection = YamlConfiguration().apply {
+        set("1.slots", "46")
+        set(
+            "1.item",
+            XItemStack.serialize(ItemStack(Material.PAPER).applyMeta { setDisplayName("返回") })
+        )
+    }
 
     @Key("delete")
-    var deleteSection: MemorySection = YamlConfiguration()
-
+    var deleteSection: MemorySection = YamlConfiguration().apply {
+        set("1.slots", "53")
+        set(
+            "1.item",
+            XItemStack.serialize(ItemStack(Material.ANVIL).applyMeta { setDisplayName("删除") })
+        )
+    }
     var accepts = mutableMapOf<ItemStack, List<Int>>()
     var backs = mutableMapOf<ItemStack, List<Int>>()
     var delete = mutableMapOf<ItemStack, List<Int>>()
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
+        MailBoxGUIYml.guiCaches.clear()
         accepts = MailBoxGUIYml.readSlots(acceptSection)
         backs = MailBoxGUIYml.readSlots(backSection)
         delete = MailBoxGUIYml.readSlots(deleteSection)
-        test()
     }
 
-    private fun test() {
-        accepts[ItemStack(Material.CHEST).applyMeta { setDisplayName("领取") }] = listOf(49)
-        backs[ItemStack(Material.PAPER).applyMeta { setDisplayName("返回") }] = listOf(46)
-        delete[ItemStack(Material.ANVIL).applyMeta { setDisplayName("删除") }] = listOf(53)
-    }
 }

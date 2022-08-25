@@ -4,7 +4,7 @@ import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionDefault
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.commandRoot
-import top.iseason.bukkit.sakuramail.ui.MailBoxContainer
+import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 
 fun command() {
     commandRoot(
@@ -91,7 +91,9 @@ fun command() {
         ) {
             onExecute {
                 val player = it as Player
-                MailBoxContainer(player).openFor(player)
+                val playerUI = MailBoxGUIYml.getPlayerUI(player)
+                playerUI.update()
+                playerUI.openFor(player)
                 true
             }
         }

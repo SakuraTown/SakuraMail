@@ -107,6 +107,7 @@ data class SystemMailYml(
     val id: String,
     var icon: ItemStack,
     var title: String,
+    var type: String = "system",
     var items: MutableMap<Int, ItemStack> = mutableMapOf(),
     var commands: MutableList<String> = mutableListOf(),
     var expire: Duration? = null

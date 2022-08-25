@@ -61,11 +61,10 @@ object TimeUtils {
         val seconds = duration.seconds
         val absSeconds = abs(seconds)
         val positive = String.format(
-            "%d 天 %02d 时 %02d 分 %02d 秒",
+            "%d 天 %02d 时 %02d 分",
             absSeconds / 86400,
             absSeconds % 86400 / 3600,
-            absSeconds % 3600 / 60,
-            absSeconds % 60
+            absSeconds % 3600 / 60
         )
         return if (seconds < 0) "-$positive" else positive
     }

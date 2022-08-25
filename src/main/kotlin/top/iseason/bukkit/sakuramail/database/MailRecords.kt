@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
@@ -54,10 +55,8 @@ class MailRecord(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<MailRecord>(MailRecords)
 
-
 }
 
-//TODO: 设置玩家ui缓存
 object MailRecordCaches {
     private val playerCaches = mutableMapOf<UUID, PlayerMailRecordCaches>()
 
@@ -140,6 +139,10 @@ class MailRecordCache(
      */
     fun remove() {
         record.delete()
+        //删除一次性邮件
+        if (mailYml.type != "system") {
+            SystemMails.deleteWhere { SystemMails.id eq mailYml.id }
+        }
     }
 
     /**
@@ -182,7 +185,7 @@ class MailRecordCache(
         // 是否领取
         if (record.acceptTime != null) return false
         // 检查过期
-        if (mailYml.expire != null && record.sendTime.plus(mailYml.expire).isAfter(LocalDateTime.now())) {
+        if (mailYml.expire != null && record.sendTime.plus(mailYml.expire).isBefore(LocalDateTime.now())) {
             return false
         }
         return true

@@ -29,4 +29,13 @@ class MailBoxContainer(val player: Player) : LazyUIContainer(
             player.openInventory(currentPage.inventory)
         }
     }
+
+    /**
+     * 更新所有页面
+     */
+    fun update() {
+        pages.forEach {
+            (it as? MailBoxPage)?.updateMails()
+        }
+    }
 }
