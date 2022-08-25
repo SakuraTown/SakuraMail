@@ -19,7 +19,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
-@FilePath("receiver.yml")
+@FilePath("receivers.yml")
 object MailReceiversYml : SimpleYAMLConfig() {
 
     @Comment("邮件目标选择器")

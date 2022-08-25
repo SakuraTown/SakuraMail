@@ -52,7 +52,7 @@ open class CommandNode(
     open var onExecute: (Params.(sender: CommandSender) -> Boolean)? = null
 ) : CommandExecutor, TabExecutor {
     var permission: Permission =
-        Permission("${BukkitTemplate.getPlugin().name.lowercase()}.$name", default)
+        Permission("${BukkitTemplate.getPlugin().name.lowercase()}.$name.", default)
 
     /**
      * 获取父节点

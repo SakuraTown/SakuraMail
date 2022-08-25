@@ -237,7 +237,7 @@ class MailSenderYml(
     fun getAllReceivers(receivers: List<String>, player: Player? = null): List<UUID> {
         var resultSet = setOf<UUID>()
         receivers.forEach {
-            val split = it.split(":")
+            val split = it.split(",")
             val op = if (split.size >= 2) split[0] else "and"
             val lastOrNull = split.lastOrNull() ?: return@forEach
             val receiver = MailReceiversYml.getReceiver(lastOrNull) ?: return@forEach

@@ -13,6 +13,7 @@ import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.getHeldItem
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.submit
@@ -20,6 +21,7 @@ import top.iseason.bukkit.bukkittemplate.utils.toColor
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
+import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.MailRecords
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.database.SystemMails.has
@@ -110,8 +112,12 @@ object SystemMailURemoveCommand : CommandNode(
         }
         if (result == 0 && SystemMailsYml.mails.remove(param) == null)
             it.sendColorMessages("&a邮件不存在!")
-        else
+        else {
             it.sendColorMessages("&a邮件已删除!")
+            MailRecordCaches.clear()
+            //关闭打开的UI，强制刷新
+            UIListener.onDisable()
+        }
         SystemMailsYml.saveToYml()
         true
     }

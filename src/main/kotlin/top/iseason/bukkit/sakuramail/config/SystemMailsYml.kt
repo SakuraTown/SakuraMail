@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.configuration.MemorySection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -12,19 +13,35 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
+import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
+import top.iseason.bukkit.bukkittemplate.config.annotations.Key
+import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.canAddItem
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
+import top.iseason.bukkit.sakuramail.config.SystemMailsYml.isEncrypted
 import top.iseason.bukkit.sakuramail.database.SystemMail
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import java.time.Duration
 
 @FilePath("mails.yml")
 object SystemMailsYml : SimpleYAMLConfig() {
+    @Key
+    @Comment(
+        "",
+        "是否对邮件的 items 加密压缩 ",
+        "如果为true，只能使用命令/sakuramail systemMail edit 命令在游戏内修改物品",
+        "请注意，设置为 false 可能不支持某些非原版物品!"
+    )
+    var isEncrypted: Boolean = true
+
+    @Key("mails")
+    var mailSection: MemorySection = YamlConfiguration()
+
     /**
      * 本地缓存
      */
@@ -32,8 +49,8 @@ object SystemMailsYml : SimpleYAMLConfig() {
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
         mails.clear()
-        for (key in getKeys(false)) {
-            val section = getConfigurationSection(key) ?: continue
+        for (key in mailSection.getKeys(false)) {
+            val section = mailSection.getConfigurationSection(key) ?: continue
             mails[key] = SystemMailYml.of(section) ?: continue
         }
     }
@@ -92,9 +109,9 @@ object SystemMailsYml : SimpleYAMLConfig() {
      * 数据保存至yml
      */
     fun saveToYml() {
-        config.getKeys(false).forEach { config.set(it, null) }
+        mailSection.getKeys(false).forEach { config.set(it, null) }
         for (mail in mails) {
-            config[mail.key] = mail.value.toSection()
+            mailSection[mail.key] = mail.value.toSection()
         }
         (config as YamlConfiguration).save(configPath)
     }
@@ -169,7 +186,18 @@ data class SystemMailYml(
         section["title"] = title
         section["expire"] = expire
         if (items.isNotEmpty()) {
-            section["items"] = ItemUtils.toBase64(items)
+            if (isEncrypted) {
+                section["items"] = ItemUtils.toBase64(items)
+            } else {
+                val itemSection = section.createSection("items")
+                items.forEach { (t, u) ->
+                    runCatching {
+                        itemSection[t.toString()] = XItemStack.serialize(u)
+                    }.getOrElse {
+                        info("&6序号 $t 的物品序列化失败!")
+                    }
+                }
+            }
             section["fakeItems"] = items.mapNotNull {
                 if (it.value.isFakeItem()) it.key
                 else null
@@ -223,18 +251,27 @@ data class SystemMailYml(
             val title = section.getString("title") ?: ""
             val systemMailYml = SystemMailYml(id, icon, title)
             systemMailYml.expire = runCatching { Duration.parse(section.getString("expire") ?: "") }.getOrNull()
-            val items = section.getString("items")
-            if (items != null) {
-                val fromBase64ToMap = ItemUtils.fromBase64ToMap(items)
-                val string = section.getString("fakeItems")
-                if (string != null) {
-                    for (s in string.split(',')) {
-                        runCatching {
-                            fromBase64ToMap[s.toInt()]?.setFakeItem()
-                        }
+            val fakes =
+                section.getString("fakeItems")?.split(',')?.mapNotNull { runCatching { it.toInt() }.getOrNull() }
+                    ?: emptyList()
+            if (isEncrypted) {
+                val items = section.getString("items")
+                if (items != null) {
+                    val fromBase64ToMap = ItemUtils.fromBase64ToMap(items)
+                    for (fake in fakes) {
+                        fromBase64ToMap[fake]?.setFakeItem()
                     }
+                    systemMailYml.items = fromBase64ToMap
                 }
-                systemMailYml.items = fromBase64ToMap
+            } else {
+                val mutableMapOf = mutableMapOf<Int, ItemStack>()
+                val itemSection = section.getConfigurationSection("items")
+                itemSection?.getKeys(false)?.forEach {
+                    val toInt = kotlin.runCatching { it.toInt() }.getOrNull() ?: return@forEach
+                    val s = itemSection.getConfigurationSection(it) ?: return@forEach
+                    mutableMapOf[toInt] = XItemStack.deserialize(s)
+                }
+                systemMailYml.items = mutableMapOf
             }
             systemMailYml.commands = section.getStringList("commands")
             return systemMailYml

@@ -66,6 +66,7 @@ object MailRecordCaches {
     fun getPlayerCache(uuid: UUID) = playerCaches[uuid]
 
     fun remove(player: Player) = playerCaches.remove(player.uniqueId)?.caches?.clear()
+    fun clear() = playerCaches.clear()
 }
 
 class PlayerMailRecordCaches(val player: Player) {

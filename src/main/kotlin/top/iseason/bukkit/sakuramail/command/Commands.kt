@@ -6,6 +6,7 @@ import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.ParamSuggestCache
 import top.iseason.bukkit.bukkittemplate.command.commandRoot
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
@@ -129,6 +130,29 @@ fun command() {
                 val playerUI = MailBoxGUIYml.getPlayerUI(player)
                 playerUI.update()
                 playerUI.openFor(player)
+                true
+            }
+        }
+        node(
+            "debug",
+            description = "切换调试模式",
+            async = true,
+            default = PermissionDefault.OP
+        ) {
+            onExecute {
+                SimpleLogger.isDebug = !SimpleLogger.isDebug
+                it.sendColorMessages("&a调试模式: &6${SimpleLogger.isDebug}")
+                true
+            }
+        }
+        node(
+            "reConnect",
+            description = "重新链接数据库",
+            async = true,
+            default = PermissionDefault.OP
+        ) {
+            onExecute {
+                DatabaseConfig.reConnected()
                 true
             }
         }
