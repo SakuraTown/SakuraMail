@@ -126,11 +126,11 @@ isEncrypted: true
 有以下子节点
 
 ~~~ tex
-create [id] <title>    创建系统邮件,手上的是图标
-edit [id]              编辑系统邮件的物品,其他操作请从yml修改
+create <id> [title]    创建系统邮件,手上的是图标
+edit <id>              编辑系统邮件的物品,其他操作请从yml修改
 upload                 上传邮件数据至数据库
 download               从数据库下载邮件数据至本地
-remove [id]            删除邮件
+remove <id>            删除邮件
 ~~~
 
 ---
@@ -141,7 +141,7 @@ remove [id]            删除邮件
 
 你有2种方式来创建邮件接收者:
 
-1. 使用命令 ` sakuramail receiver add [id] <parms>`  为某个id的接收者添加参数，如果不存在则将创建新的。
+1. 使用命令 ` sakuramail receiver add <id> <parms>`  为某个id的接收者添加参数，如果不存在则将创建新的。
 
 2. 通过配置修改 `receivers.yml`
 
@@ -175,26 +175,33 @@ remove [id]            删除邮件
 
 | 参数                                     | 说明                                        |
 | ---------------------------------------- | ------------------------------------------- |
-| loginTime before [time]                  | 登陆时间 在 [time]之前                      |
-| loginTime after [time]                   | 登陆时间 在 [time]之后                      |
-| loginTime between [time1] [time2]        | 登陆时间 在 [time1] 和 [time2]之间          |
-| quitTime before [time]                   | 退出时间 在 [time]之前                      |
-| quitTime after [time]                    | 退出时间 在 [time]之后                      |
-| quitTime between [time1] [time2]         | 退出时间 在 [time1] 和 [time2]之间          |
-| playtime greater [duartion]              | 一次游戏时间大于 [duartion]                 |
-| playtime less [duartion]                 | 一次游戏时间小于 [duartion]                 |
-| playtime between [duartion1] [duartion1] | 一次游戏时间在 [duartion1] [duartion2] 之间 |
+| loginTime before <time>                  | 登陆时间 在 <time>之前                      |
+| loginTime after <time>                   | 登陆时间 在 <time>之后                      |
+| loginTime between <time1> <time2>        | 登陆时间 在 <time1> 和 <time2>之间          |
+| quitTime before <time>                   | 退出时间 在 <time>之前                      |
+| quitTime after <time>                    | 退出时间 在 <time>之后                      |
+| quitTime between <time1> <time2>         | 退出时间 在 <time1> 和 <time2>之间          |
+| playtime greater <duartion>              | 一次游戏时间大于 <duartion>                 |
+| playtime less <duartion>                 | 一次游戏时间小于 <duartion>                 |
+| playtime between <duartion1> <duartion1> | 一次游戏时间在 <duartion1> <duartion2> 之间 |
 
 #### 其他sql参数
 
-<start> <end> 为 `totaltime` 专用可选参数,分别为 `统计时间`的 `起始`和`终点`不选则默认所有时间范围 格式与[time] 相同
+<start> <end> 为 `totaltime` 专用可选参数,分别为 `统计时间`的 `起始`和`终点`不选则默认所有时间范围 格式与<time> 相同
+
+start需要以S开头，end需要以E开头,顺序随意
+
+比如
+
+totaltime greater PT5H SDPT0S 表示今天0点开始在线超过5小时
+totaltime greater PT5H SDP-1D EPT0S 表示昨天0点到现在在线超过5小时
 
 | 参数                                                    | 说明                                    |
 | ------------------------------------------------------- | --------------------------------------- |
-| totaltime greater [duartion] <start> <end>              | 游戏时间大于 [duartion]                 |
-| totaltime less [duartion] <start> <end>                 | 游戏时间小于 [duartion]                 |
-| totaltime between [duartion1] [duartion1] <start> <end> | 游戏时间在 [duartion1] [duartion1] 之间 |
-| hasmail [id]                                            | 拥有 ID 为 [id]的邮件                   |
+| totaltime greater <duartion> [start] [end]              | 游戏时间大于 <duartion>                 |
+| totaltime less <duartion> [start] [end]                 | 游戏时间小于 <duartion>                 |
+| totaltime between <duartion1> <duartion1> <start> <end> | 游戏时间在 <duartion1> <duartion1> 之间 |
+| hasmail <id>                                            | 拥有 ID 为 <id>的邮件                   |
 | all                                                     | 所有记录过的玩家(在安装本插件之后)      |
 
 #### 其他参数 (范围在触发的那个服务器里)
@@ -203,11 +210,11 @@ remove [id]            删除邮件
 | --------------------------------- | ------------------------------------- |
 | online                            | 所有在线玩家                          |
 | offline                           | 所有离线玩家                          |
-| permission [permission]           | 所有拥有 [permission] 权限的在线玩家  |
-| gamemode [gamemode]               | 所有 游戏模式为 [gamemode] 的在线玩家 |
-| uuids [uuid1];[uuid2];[uuid3].... | 一组uuid的玩家                        |
-| names [name1];[name2];[name3].... | 一组name的玩家（从登录过的玩家里找）  |
-| limit [count]                     | 限制集合最多 [count] 个               |
+| permission <permission>           | 所有拥有 <permission> 权限的在线玩家  |
+| gamemode <gamemode>               | 所有 游戏模式为 <gamemode> 的在线玩家 |
+| uuids <uuid1>;[uuid2];[uuid3].... | 一组uuid的玩家                        |
+| names <name1>;[name2];[name3].... | 一组name的玩家（从登录过的玩家里找）  |
+| limit <count>                     | 限制集合最多 <count> 个               |
 
 ### 参数集合操作
 
@@ -244,6 +251,7 @@ remove [id]            删除邮件
 
 * remove,permission xxx
 
+
 => 在线玩家中没有xxx权限的玩家
 
 #### 相关命令
@@ -253,13 +261,13 @@ remove [id]            删除邮件
 有以下子节点
 
 ~~~ tex
-set [id] <index> <parms>  设置邮件接收者参数
-add [id] <parms>          设置邮件接收者参数
-remove [id]               删除邮件接收者
-test [id]                 测试邮件接收者
-upload [id]               上传邮件接收者数据
-download [id]             下载邮件接收者数据
-export [id] <type>        导出符合邮件接收者的玩家
+set <id> <index> <parms>  设置邮件接收者参数
+add <id> <parms>          设置邮件接收者参数
+remove <id>               删除邮件接收者
+test <id>                 测试邮件接收者
+upload <id>               上传邮件接收者数据
+download <id>             下载邮件接收者数据
+export <id> <type>        导出符合邮件接收者的玩家
 ~~~
 
 ---
@@ -270,9 +278,9 @@ export [id] <type>        导出符合邮件接收者的玩家
 
 你有2种方式来创建邮件发送者:
 
-1. 使用命令 ` sakuramail sender create [id] [type] [param]`
+1. 使用命令 ` sakuramail sender create <id> <type> [param]`
 
-   其中 [id] 为唯一id [type] 为发送者的类型，目前有 `onTime` `period` `login` `manual` 4种 [parma] 为对应类型的参数
+   其中 <id> 为唯一id <type> 为发送者的类型，目前有 `onTime` `period` `login` `manual` 4种 [parma] 为对应类型的参数
 
 2. 通过配置修改 `senders.yml`
 
@@ -347,15 +355,50 @@ export [id] <type>        导出符合邮件接收者的玩家
 
 `database.yml`为数据库设置，默认使用 `H2` 数据库,生成的默认文件名为 `database.mv.db`
 
-ui目录下为邮箱界面的设置，可以通过修改文件来修改邮箱界面
+**ui目录下为邮箱界面的设置，可以通过修改文件来修改邮箱界面**
+
+如果你装了 `ItemsAdder`
+
+UI配置中的
+
+item 项可以为 `item: namespacedId`
+
+否则为
+
+~~~yaml
+item:
+  material: PAPER
+~~~
 
 `quartz.properties`为 quartz 库的设置，不懂可以不管
 
 相关信息在文件中都有注释
 
+## 变量
+
+以下只能用于 `mailbox.yml` 的 `title`
+
+| 变量                       | 意义           |
+| -------------------------- | -------------- |
+| %sakura_mail_current_page% | 当前邮箱的页码 |
+| %sakura_mail_total_page%   | 邮箱的总行数   |
+
+以下只能用于 `mails.yml` 的 `icon` 选项
+
+| 变量                     | 意义                   |
+| ------------------------ | ---------------------- |
+| %sakura_mail_id%         | 当前邮件的id           |
+| %sakura_mail_sendtime%   | 当前邮件的发送时间     |
+| %sakura_mail_accepttime% | 当前邮件的领取时间     |
+| %sakura_mail_expire%     | 当前邮件的剩余有效时间 |
+
+其他的变量由PlaceHolderAPI提供,有效范围为 邮箱界面、邮件title
+
+邮箱界面可看到的所有物品(除了附件物品)
+
 ## 时间格式
 
-瞬时时间[time] 支持的格式有
+瞬时时间<time> 支持的格式有
 
 **第一种**
 
@@ -380,7 +423,7 @@ T：日期和时间的分割标记
 
 15.02S：15.02秒
 
-**以上格式也支持`[duartion]` P1D 表示一天的时间 PT1H表示1小时的时间,但是以下不支持**
+**以上格式也支持`<duartion>` P1D 表示一天的时间 PT1H表示1小时的时间,但是以下仅支持<time> **
 
 可在在P之前声明参考系 如DPT1D 表示明天的0点 D-PT1D 或 DPT-1D 表示昨天的0点
 

@@ -37,7 +37,7 @@ object SystemMailCreateCommand : CommandNode(
     name = "create",
     description = "创建系统邮件,手上的是图标",
     default = PermissionDefault.OP,
-    params = arrayOf(Param("[id]"), Param("<title>")),
+    params = arrayOf(Param("<id>"), Param("[title]")),
     async = true
 ) {
     override var onExecute: (Params.(CommandSender) -> Boolean)? = onExecute@{
@@ -67,7 +67,7 @@ object SystemMailEditCommand : CommandNode(
     name = "edit",
     description = "编辑系统邮件的物品,其他操作请从yml修改",
     default = PermissionDefault.OP,
-    params = arrayOf(Param("[id]", suggestRuntime = { SystemMailsYml.mails.keys })),
+    params = arrayOf(Param("<id>", suggestRuntime = { SystemMailsYml.mails.keys })),
     isPlayerOnly = true,
     async = true
 ) {
@@ -97,7 +97,7 @@ object SystemMailURemoveCommand : CommandNode(
     name = "remove",
     description = "删除邮件",
     default = PermissionDefault.OP,
-    params = arrayOf(Param("[id]", suggestRuntime = { SystemMailsYml.mails.keys })),
+    params = arrayOf(Param("<id>", suggestRuntime = { SystemMailsYml.mails.keys })),
     async = true
 ) {
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{

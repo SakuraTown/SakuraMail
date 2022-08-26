@@ -15,6 +15,7 @@ import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.sakuramail.command.command
 import top.iseason.bukkit.sakuramail.config.*
 import top.iseason.bukkit.sakuramail.database.*
+import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
 import java.io.File
@@ -31,11 +32,11 @@ object SakuraMail : KotlinPlugin() {
         SimpleYAMLConfig.notifyMessage = "&7配置文件 &6%s &7已重载!"
     }
 
-
     override fun onAsyncEnable() {
         info("&6插件初始化中...")
         Lang.load(false)
         PlaceHolderHook
+        ItemsAdderHook
         DatabaseConfig.load(false)
         DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
         SystemMailsYml.load(false)

@@ -51,7 +51,7 @@ fun command() {
             description = "上传数据到数据库",
             default = PermissionDefault.OP,
             async = true,
-            params = arrayOf(Param("[type]", listOf("all", "sender", "systemMail", "receiver")))
+            params = arrayOf(Param("<type>", listOf("all", "sender", "systemMail", "receiver")))
         ) {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
@@ -76,7 +76,7 @@ fun command() {
             default = PermissionDefault.OP,
             description = "从数据库下载数据",
             async = true,
-            params = arrayOf(Param("[type]", listOf("all", "sender", "systemMail", "receiver")))
+            params = arrayOf(Param("<type>", listOf("all", "sender", "systemMail", "receiver")))
         ) {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
@@ -119,7 +119,7 @@ fun command() {
             description = "为玩家打开邮箱",
             async = true,
             default = PermissionDefault.OP,
-            params = arrayOf(Param("[player]", suggestRuntime = ParamSuggestCache.playerParam))
+            params = arrayOf(Param("<player>", suggestRuntime = ParamSuggestCache.playerParam))
         ) {
             onExecute {
                 if (!DatabaseConfig.isConnected) {

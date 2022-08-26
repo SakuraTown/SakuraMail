@@ -27,8 +27,8 @@ object SenderCreateCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true,
     params = arrayOf(
-        Param("[id]"),
-        Param("[type]", listOf("login", "onTime", "period", "manual")),
+        Param("<id>"),
+        Param("<type>", listOf("login", "onTime", "period", "manual")),
         Param("[parma]")
     )
 ) {
@@ -52,7 +52,7 @@ object SenderRemoveCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
+        Param("<id>", suggestRuntime = { MailSendersYml.senders.keys })
     )
 ) {
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
@@ -75,7 +75,7 @@ object SenderSendCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailSendersYml.senders.keys })
+        Param("<id>", suggestRuntime = { MailSendersYml.senders.keys })
     )
 ) {
     override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{

@@ -13,6 +13,7 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
+import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import top.iseason.bukkit.sakuramail.ui.MailBoxContainer
 import java.util.*
 
@@ -129,18 +130,19 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
                     runCatching { it.toInt() }.getOrNull()
                 }
                 val itemSection = section2["item"]
-                val item =
-                    if (itemSection is Map<*, *>) itemSection as Map<String, Any>
-                    else (itemSection as MemorySection).getValues(true)
-                val icon =
-                    runCatching {
-                        XItemStack.deserialize(
-                            item
-                        )
+                var item: ItemStack? = null
+                if (itemSection is String) item = ItemsAdderHook.getItemsAdderItem(itemSection)
+                if (item == null) {
+                    val itemMap =
+                        if (itemSection is Map<*, *>) itemSection as Map<String, Any>
+                        else (itemSection as MemorySection).getValues(true)
+                    item = runCatching {
+                        XItemStack.deserialize(itemMap)
                     }.getOrElse {
                         ItemStack(Material.AIR)
                     }
-                mutableMapOf[icon] = slots
+                }
+                mutableMapOf[item] = slots
             }
         }.getOrElse {
             info("&6配置 ${section.name} 读取错误!")

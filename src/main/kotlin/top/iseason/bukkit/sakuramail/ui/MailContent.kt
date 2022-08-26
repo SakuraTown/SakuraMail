@@ -20,7 +20,8 @@ class MailContent(
     val mail: MailRecordCache,
     val lastUI: MailBoxPage? = null
 ) : ChestUI(
-    mail.mailYml.title, row = MailBoxGUIYml.row,
+    mail.mailYml.title,
+    row = MailBoxGUIYml.row,
     clickDelay = 500L
 ) {
 

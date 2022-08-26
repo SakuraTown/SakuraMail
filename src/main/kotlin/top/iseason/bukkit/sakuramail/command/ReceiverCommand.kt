@@ -55,8 +55,8 @@ object ReceiverAddCommand : CommandNode(
     description = "设置邮件接收者参数",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
-        Param("<parms>", suggest = ReceiverCommand.listOf),
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
+        Param("[parms]", suggest = ReceiverCommand.listOf),
         Param("", suggest = ReceiverCommand.listOf),
         Param("", suggest = ReceiverCommand.listOf),
         Param("", suggest = ReceiverCommand.listOf),
@@ -87,9 +87,9 @@ object ReceiverSetCommand : CommandNode(
     description = "设置邮件接收者参数",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
-        Param("<index>"),
-        Param("<parms>", suggest = ReceiverCommand.listOf)
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
+        Param("[index]"),
+        Param("[parms]", suggest = ReceiverCommand.listOf)
     ),
     async = true
 ) {
@@ -110,7 +110,7 @@ object ReceiverRemoveCommand : CommandNode(
     description = "删除邮件接收者",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
     ),
     async = true
 ) {
@@ -136,7 +136,7 @@ object ReceiverTestCommand : CommandNode(
     description = "测试邮件接收者",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
     ),
     async = true
 ) {
@@ -168,8 +168,8 @@ object ReceiverExportCommand : CommandNode(
     description = "导出符合邮件接收者的玩家",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
-        Param("<type>", suggest = listOf("name", "uuid"))
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys }),
+        Param("[type]", suggest = listOf("name", "uuid"))
     ),
     async = true
 ) {
@@ -208,7 +208,7 @@ object ReceiverUploadCommand : CommandNode(
     description = "上传邮件接收者数据",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
     ),
     async = true
 ) {
@@ -233,7 +233,7 @@ object ReceiverDownloadCommand : CommandNode(
     description = "下载邮件接收者数据",
     default = PermissionDefault.OP,
     params = arrayOf(
-        Param("[id]", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
+        Param("<id>", suggestRuntime = { MailReceiversYml.timeReceivers.keys })
     ),
     async = true
 ) {
