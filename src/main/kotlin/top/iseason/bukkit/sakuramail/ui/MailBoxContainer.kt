@@ -5,12 +5,12 @@ import org.bukkit.entity.Player
 import top.iseason.bukkit.bukkittemplate.ui.container.BaseUI
 import top.iseason.bukkit.bukkittemplate.ui.container.LazyUIContainer
 import top.iseason.bukkit.bukkittemplate.utils.submit
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 
 class MailBoxContainer(val player: Player) : LazyUIContainer(
     buildList {
         val cl = MailBoxPage::class.java
-        repeat(MailRecordCaches.getPlayerCache(player).page) {
+        repeat(PlayerMailRecordCaches.getPlayerCache(player).page) {
             add(cl)
         }
     }

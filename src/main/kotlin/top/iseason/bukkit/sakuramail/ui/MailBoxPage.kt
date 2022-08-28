@@ -11,14 +11,14 @@ import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCache
 import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 
 class MailBoxPage(
     val player: Player,
-    val page: Int = 0,
-    val mailCache: PlayerMailRecordCaches = MailRecordCaches.getPlayerCache(player)
+    private val page: Int = 0,
+    private val mailCache: PlayerMailRecordCache = PlayerMailRecordCaches.getPlayerCache(player)
 ) : ChestUI(
     PlaceHolderHook.setPlaceHolder(
         MailBoxGUIYml.title
@@ -27,7 +27,7 @@ class MailBoxPage(
     ), row = MailBoxGUIYml.row,
     clickDelay = 500L
 ) {
-    private var mails = mailCache.getCache(page)
+    private var mails = mailCache.getPageCache(page)
     private var mailIndex = mutableMapOf<Int, Int>()
 
     private val icon = Icon(ItemStack(Material.AIR), 0)
@@ -51,7 +51,7 @@ class MailBoxPage(
         transaction {
             mails!!.forEach {
                 if (it.canGetKit()) return@forEach
-                MailRecordCaches.getPlayerCache(player).removeCache(it)
+                PlayerMailRecordCaches.getPlayerCache(player).removeCache(it)
                 it.remove()
             }
         }
@@ -107,7 +107,7 @@ class MailBoxPage(
 
 
     fun updateMails() {
-        mails = mailCache.getCache(page)
+        mails = mailCache.getPageCache(page)
         mailIndex.clear()
         val iterator = mails?.iterator()
         var index = 0

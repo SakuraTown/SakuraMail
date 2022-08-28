@@ -2,6 +2,7 @@ package top.iseason.bukkit.sakuramail.config
 
 import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.MemorySection
@@ -9,7 +10,6 @@ import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
@@ -26,6 +26,7 @@ import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml.isEncrypted
 import top.iseason.bukkit.sakuramail.database.SystemMail
 import top.iseason.bukkit.sakuramail.database.SystemMails
+import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import java.time.Duration
 
 @FilePath("mails.yml")
@@ -73,21 +74,8 @@ object SystemMailsYml : SimpleYAMLConfig() {
      */
     fun upload() {
         transaction {
-            SystemMails.deleteWhere { SystemMails.type eq "system" }
             for (value in mails.values) {
-                SystemMail.new(value.id) {
-                    this.icon = ExposedBlob(ItemUtils.toByteArray(value.icon))
-                    this.title = value.title
-                    if (value.items.isNotEmpty()) {
-                        this.items = ExposedBlob(ItemUtils.toByteArrays(value.items))
-                    }
-                    if (value.commands.isNotEmpty()) {
-                        this.commands = value.commands.joinToString(";")
-                    }
-                    if (value.expire != null) {
-                        this.expire = value.expire
-                    }
-                }
+                value.toDatabase()
             }
         }
     }
@@ -139,6 +127,7 @@ data class SystemMailYml(
         player.giveItems(filter)
         submit {
             for (command in commands) {
+                if (command.isBlank()) continue
                 parseCommand(command, player)
             }
         }
@@ -246,8 +235,11 @@ data class SystemMailYml(
          */
         fun of(section: ConfigurationSection): SystemMailYml? {
             val id = section.getString("id") ?: return null
-            val iconSection = section.getConfigurationSection("icon") ?: YamlConfiguration()
-            val icon = XItemStack.deserialize(iconSection)
+            val iconSection = section["icon"]
+            var icon: ItemStack? = null
+            if (iconSection is String) icon = ItemsAdderHook.getItemsAdderItem(iconSection)
+            else if (iconSection is ConfigurationSection) icon = XItemStack.deserialize(iconSection)
+            if (icon == null) icon = ItemStack(Material.AIR)
             val title = section.getString("title") ?: ""
             val systemMailYml = SystemMailYml(id, icon, title)
             systemMailYml.expire = runCatching { Duration.parse(section.getString("expire") ?: "") }.getOrNull()
@@ -281,6 +273,7 @@ data class SystemMailYml(
          * 检测此Item是否是虚拟物品，将不会给予玩家
          */
         fun ItemStack.isFakeItem() = itemMeta?.persistentDataContainer?.has(FAKE_ITEM, PersistentDataType.BYTE) == true
+
         fun ItemStack.setFakeItem() = applyMeta {
             persistentDataContainer.set(FAKE_ITEM, PersistentDataType.BYTE, 1)
         }

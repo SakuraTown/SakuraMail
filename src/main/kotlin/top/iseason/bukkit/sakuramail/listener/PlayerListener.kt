@@ -16,8 +16,8 @@ import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.MailSendersYml
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.MailRecords
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.database.PlayerTime
 import top.iseason.bukkit.sakuramail.database.PlayerTimes
 import java.time.Duration
@@ -77,7 +77,7 @@ object PlayerListener : Listener {
         if (!DatabaseConfig.isConnected) return
         submit(async = true) {
             onQuit(event.player)
-            MailRecordCaches.remove(event.player)
+            PlayerMailRecordCaches.remove(event.player)
             MailBoxGUIYml.guiCaches.remove(event.player.uniqueId)
         }
     }

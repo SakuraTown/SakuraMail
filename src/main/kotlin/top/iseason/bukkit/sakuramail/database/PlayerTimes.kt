@@ -72,6 +72,9 @@ object PlayerTimes : IntIdTable() {
         return duration
     }
 
+    /**
+     * 获取所有玩家在某个时间区间的总在线时间
+     */
     fun getTotalTimes(
         start: LocalDateTime = LocalDateTime.of(0, 1, 1, 0, 0),
         end: LocalDateTime = LocalDateTime.of(100000, 1, 1, 0, 0)

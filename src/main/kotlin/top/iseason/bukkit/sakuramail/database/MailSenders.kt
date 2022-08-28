@@ -33,7 +33,7 @@ class MailSender(
     /**
      * 转yml
      */
-    fun toMailSenderYml(): MailSenderYml? {
+    fun toMailSenderYml(): MailSenderYml {
         val receivers = receivers.split(',').toList()
         val mails = mails.split(',').mapNotNull { SystemMailsYml.getMailYml(it) }.toList()
         return MailSenderYml(id.value, type, param, receivers, mails)

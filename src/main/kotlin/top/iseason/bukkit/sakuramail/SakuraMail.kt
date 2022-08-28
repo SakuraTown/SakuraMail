@@ -52,6 +52,7 @@ object SakuraMail : KotlinPlugin() {
             Bukkit.getOnlinePlayers().forEach { PlayerListener.onLogin(it) }
         }.getOrElse { it.printStackTrace() }
         info("&a插件初始化完成!")
+
     }
 
     override fun onDisable() {
@@ -60,7 +61,7 @@ object SakuraMail : KotlinPlugin() {
         runCatching {
             Bukkit.getOnlinePlayers().forEach {
                 PlayerListener.onQuit(it)
-                MailRecordCaches.remove(it)
+                PlayerMailRecordCaches.remove(it)
                 MailBoxGUIYml.guiCaches.remove(it.uniqueId)
             }
         }.getOrElse { it.printStackTrace() }
@@ -105,8 +106,10 @@ object SakuraMail : KotlinPlugin() {
                     this.type = "temp"
                     this.icon = ExposedBlob(ItemUtils.toByteArray(icon))
                     this.title = title
-                    this.items = ExposedBlob(ItemUtils.toByteArrays(items))
-                    this.commands = commands.joinToString(";")
+                    if (items.isNotEmpty())
+                        this.items = ExposedBlob(ItemUtils.toByteArrays(items))
+                    if (commands.isNotEmpty())
+                        this.commands = commands.joinToString(";")
                     this.expire = expire
                 }
                 val new = MailRecord.new {
@@ -114,7 +117,7 @@ object SakuraMail : KotlinPlugin() {
                     this.mail = mail.id.value
                     this.sendTime = LocalDateTime.now()
                 }
-                MailRecordCaches.getPlayerCache(uuid)?.insertRecord(new)
+                PlayerMailRecordCaches.getPlayerCache(uuid)?.insertRecord(new)
                 Bukkit.getPlayer(uuid)?.sendColorMessages(Lang.new_mail)
             }
         }.getOrElse { return false }

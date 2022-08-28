@@ -119,6 +119,19 @@
 isEncrypted: true
 ~~~
 
+如果你装了 `ItemsAdder`
+
+`mails.yml` 中的
+
+icon 项可以为 `item: namespacedId`
+
+否则为
+
+~~~yaml
+icon:
+  material: PAPER
+~~~
+
 #### 相关命令
 
 `sakuramail systemMail` 为邮件命令的根节点

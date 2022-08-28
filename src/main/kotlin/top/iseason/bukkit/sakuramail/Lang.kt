@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 
 @Key
 @FilePath("lang.yml")
-object Lang : SimpleYAMLConfig(updateNotify = false) {
+object Lang : SimpleYAMLConfig() {
     var prefix = "&a[&6${BukkitTemplate.getPlugin().description.name}&a] &f"
 
     @Comment("", "gui中的时间变量显示格式")
@@ -33,9 +33,12 @@ object Lang : SimpleYAMLConfig(updateNotify = false) {
     var login_tip = "&a你有 {0} 个未领取的邮件, 请输入/smail open 领取!"
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
-        TimeUtils.timeFormat = DateTimeFormatter.ofPattern(time_Format)
+        TimeUtils.timeFormat = kotlin.runCatching { DateTimeFormatter.ofPattern(time_Format) }
+            .getOrElse {
+                info("&6参数 &7$time_Format &6不正确，已恢复默认值: &7yyyy-MM-dd HH:mm:ss")
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            }
         SimpleLogger.prefix = prefix
         MessageUtils.defaultPrefix = prefix
-        info("&a语言文件已重载!")
     }
 }

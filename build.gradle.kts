@@ -48,6 +48,10 @@ repositories {
         url = uri("https://hub.spigotmc.org/nexus/content/repositories/public/")
     }
     maven {
+        name = "CodeMC"
+        url = uri("https://repo.codemc.org/repository/maven-public/")
+    }
+    maven {
         name = "jitpack"
         url = uri("https://jitpack.io")
     }
@@ -68,6 +72,7 @@ dependencies {
 //    协程库
 //    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
     implementation("org.bstats:bstats-bukkit:3.0.0")
+    implementation("io.github.bananapuncher714:nbteditor:7.18.3")
     // 数据库
     compileOnly("org.jetbrains.exposed:exposed-core:$exposedVersion")
     compileOnly("org.jetbrains.exposed:exposed-dao:$exposedVersion")
@@ -86,6 +91,8 @@ dependencies {
 tasks {
     shadowJar {
         relocate("top.iseason.bukkit.bukkittemplate", "$groupS.libs.core")
+        relocate("org.bstats.bstats-bukkit", "$groupS.libs.bstats")
+        relocate("io.github.bananapuncher714.nbteditor", "$groupS.libs.nbteditor")
     }
     build {
         dependsOn("buildPlugin")
@@ -145,11 +152,12 @@ tasks.register<proguard.gradle.ProGuardTask>("buildPlugin") {
     //启用混淆的选项
     val allowObf = mapOf("allowobfuscation" to true)
     //class规则
-    keep("class $groupS.libs.core.BukkitTemplate {}")
+    keep("class $groupS.libs.core.BukkitTemplate {*;}")
+//    keepclassmembers(allowObf,"class $groupS.libs.core.utils.NBTEditor {*;}")
     keep(allowObf, "class $groupS.libs.core.utils.MessageUtilsKt {*;}")
     keep("class * implements $groupS.libs.core.KotlinPlugin {*;}")
     keepclassmembers("class * extends $groupS.libs.core.config.SimpleYAMLConfig {*;}")
-    keepclassmembers("class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
+//    keepclassmembers(allowObf, "class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
     keepclassmembers(allowObf, "class * implements org.bukkit.event.Listener {*;}")
     keepclassmembers("class * extends org.jetbrains.exposed.dao.Entity {*;}")
 //    keepclassmembers(

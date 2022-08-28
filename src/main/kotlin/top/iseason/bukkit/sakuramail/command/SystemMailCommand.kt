@@ -21,8 +21,8 @@ import top.iseason.bukkit.bukkittemplate.utils.toColor
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.MailRecords
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.database.SystemMails.has
 import top.iseason.bukkit.sakuramail.utils.IOUtils.onItemInput
@@ -114,7 +114,7 @@ object SystemMailURemoveCommand : CommandNode(
             it.sendColorMessages("&a邮件不存在!")
         else {
             it.sendColorMessages("&a邮件已删除!")
-            MailRecordCaches.clear()
+            PlayerMailRecordCaches.clear()
             //关闭打开的UI，强制刷新
             UIListener.onDisable()
         }

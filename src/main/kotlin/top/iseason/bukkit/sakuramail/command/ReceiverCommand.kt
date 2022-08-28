@@ -154,8 +154,8 @@ object ReceiverTestCommand : CommandNode(
                     ", ",
                     limit = 5,
                     truncated = "..."
-                ) {
-                    (Bukkit.getPlayer(it) ?: Bukkit.getOfflinePlayer(it)).name.toString()
+                ) { uid ->
+                    (Bukkit.getPlayer(uid) ?: Bukkit.getOfflinePlayer(uid)).name.toString()
                 }
             }"
         )
@@ -219,8 +219,8 @@ object ReceiverUploadCommand : CommandNode(
         }
         kotlin.runCatching {
             MailReceiversYml.upload()
-        }.getOrElse {
-            it.printStackTrace()
+        }.getOrElse { e ->
+            e.printStackTrace()
             throw ParmaException("&cMailReceiver数据上传异常!")
         }
         it.sendColorMessages("&aMailReceiver数据上传成功!")
@@ -244,8 +244,8 @@ object ReceiverDownloadCommand : CommandNode(
         }
         kotlin.runCatching {
             MailReceiversYml.download()
-        }.getOrElse {
-            it.printStackTrace()
+        }.getOrElse { e ->
+            e.printStackTrace()
             throw ParmaException("&cMailReceiver数据下载异常!")
         }
         it.sendColorMessages("&aMailReceiver数据下载成功!")

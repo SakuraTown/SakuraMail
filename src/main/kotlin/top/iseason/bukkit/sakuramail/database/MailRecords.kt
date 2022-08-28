@@ -55,13 +55,23 @@ class MailRecord(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<MailRecord>(MailRecords)
 
+    /**
+     * 邮件是否过期
+     */
+    fun isExpired(): Boolean {
+        val expire = SystemMailsYml.getMailYml(mail)!!.expire ?: return false
+        return sendTime.plus(expire).isBefore(LocalDateTime.now())
+    }
 }
 
-object MailRecordCaches {
-    private val playerCaches = mutableMapOf<UUID, PlayerMailRecordCaches>()
+/**
+ * 所有玩家的邮件缓存，直到推出服务器才删除
+ */
+object PlayerMailRecordCaches {
+    private val playerCaches = mutableMapOf<UUID, PlayerMailRecordCache>()
 
     fun getPlayerCache(player: Player) =
-        playerCaches.computeIfAbsent(player.uniqueId) { PlayerMailRecordCaches(player) }
+        playerCaches.computeIfAbsent(player.uniqueId) { PlayerMailRecordCache(player) }
 
     fun getPlayerCache(uuid: UUID) = playerCaches[uuid]
 
@@ -69,13 +79,16 @@ object MailRecordCaches {
     fun clear() = playerCaches.clear()
 }
 
-class PlayerMailRecordCaches(val player: Player) {
+/**
+ * 玩家邮件缓存
+ */
+class PlayerMailRecordCache(val player: Player) {
     /**
      * 邮件缓存，key为 mail id
      */
     var caches: MutableMap<Int, MailRecordCache> = mutableMapOf()
 
-    var records = transaction { MailRecord.find { MailRecords.player eq player.uniqueId }.toMutableSet() }
+    private var records = transaction { MailRecord.find { MailRecords.player eq player.uniqueId }.toMutableSet() }
 
     /**
      * 规划好的页面
@@ -88,26 +101,38 @@ class PlayerMailRecordCaches(val player: Player) {
     /**
      * 获取缓存的一页
      */
-    fun getCache(page: Int): List<MailRecordCache>? {
+    fun getPageCache(page: Int): List<MailRecordCache>? {
         val content = pages.getOrNull(page) ?: return null
         return content.map { record -> caches.computeIfAbsent(record.id.value) { MailRecordCache(record, player) } }
     }
 
+    /**
+     * 插入记录
+     */
     fun insertRecord(record: MailRecord) {
         records.add(record)
         update()
     }
 
+    /**
+     * 删除记录
+     */
     fun removeRecord(record: MailRecord) {
         records.remove(record)
         update()
     }
 
+    /**
+     * 删除缓存
+     */
     fun removeCache(cache: MailRecordCache) {
         caches.remove(cache.record.id.value)
         removeRecord(cache.record)
     }
 
+    /**
+     * 更新缓存
+     */
     fun update() {
         pages = records.sortedByDescending { it.sendTime }.chunked(MailBoxGUIYml.pageMailSize)
         page = if (pages.isEmpty()) 1 else pages.size
@@ -115,13 +140,16 @@ class PlayerMailRecordCaches(val player: Player) {
 
 }
 
+/**
+ * 邮件缓存
+ */
 class MailRecordCache(
     val record: MailRecord,
     val player: Player
 ) {
     lateinit var icon: ItemStack
-    var expireStr = ""
-    val mailYml by lazy { getYml() }
+    private var expireStr = ""
+    val mailYml = getYml()
 
     init {
         setIconAndTitle()
@@ -154,14 +182,14 @@ class MailRecordCache(
             player.sendColorMessages(Lang.ui_get_has_accepted)
             return false
         }
-        if (!mailYml.apply(player)) {
+        return if (!mailYml.apply(player)) {
             player.sendColorMessages(Lang.ui_get_no_space)
-            return false
+            false
         } else {
             player.sendColorMessages(Lang.ui_get_success)
             setAccepted()
             setIconAndTitle()
-            return true
+            true
         }
     }
 
@@ -196,17 +224,16 @@ class MailRecordCache(
         val yml = SystemMailsYml.getMailYml(record.mail)!!
         val mutableMapOf = mutableMapOf<Int, ItemStack>()
         yml.items.forEach { (t, u) -> mutableMapOf[t] = PlaceHolderHook.setPlaceHolder(u.clone(), player) }
-        val copy = yml.copy(
+        return yml.copy(
             id = record.mail,
             icon = icon,
             title = PlaceHolderHook.setPlaceHolder(yml.title, player),
             items = mutableMapOf,
             commands = yml.commands.map { PlaceHolderHook.setPlaceHolder(it, player) }.toMutableList()
         )
-        return copy
     }
 
-    fun setIconAndTitle() {
+    private fun setIconAndTitle() {
         val systemMailYml = SystemMailsYml.getMailYml(record.mail)!!
         val itemStack = systemMailYml.icon.clone()
         expireStr = getExpireStr(systemMailYml.expire)
@@ -244,7 +271,7 @@ class MailRecordCache(
 
     }
 
-    fun getExpireStr(expire: Duration?): String {
+    private fun getExpireStr(expire: Duration?): String {
         if (expire == null) return "无限"
         val between = Duration.between(LocalDateTime.now(), record.sendTime.plus(expire))
         if (between.isNegative) return "已到期"

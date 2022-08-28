@@ -5,7 +5,6 @@ import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
-import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
@@ -18,9 +17,8 @@ import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.MailRecord
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
 import top.iseason.bukkit.sakuramail.database.MailSender
-import top.iseason.bukkit.sakuramail.database.MailSenders
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -37,7 +35,7 @@ object MailSendersYml : SimpleYAMLConfig() {
         removeOnCancelPolicy = true
     }
     val scheduler: Scheduler = StdSchedulerFactory(SakuraMail.loadOrCopyQuartzProperties()).scheduler
-    val schedules = mutableListOf<ScheduledFuture<*>>()
+    private val schedules = mutableListOf<ScheduledFuture<*>>()
     var senders = mutableMapOf<String, MailSenderYml>()
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
@@ -100,7 +98,7 @@ object MailSendersYml : SimpleYAMLConfig() {
             .withIdentity(sender.id, "sakura-mail-sender")
             .usingJobData("id", sender.id)
             .build()
-        scheduler.scheduleJob(job, trigger);
+        scheduler.scheduleJob(job, trigger)
         info("&aOnTime &a任务 &6${sender.id} 已启动: &6${sender.param}")
     }
 
@@ -141,15 +139,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      */
     fun upload() {
         transaction {
-            MailSenders.deleteAll()
-            senders.values.forEach { sender ->
-                MailSender.new(sender.id) {
-                    this.type = sender.type
-                    this.param = sender.param
-                    this.receivers = sender.receivers.joinToString(",")
-                    this.mails = sender.mails.joinToString(",") { it.id }
-                }
-            }
+            senders.values.forEach { sender -> sender.toDatabase() }
         }
     }
 
@@ -161,7 +151,7 @@ object MailSendersYml : SimpleYAMLConfig() {
         transaction {
             MailSender.all()
         }.forEach {
-            val mailSenderYml = it.toMailSenderYml() ?: return@forEach
+            val mailSenderYml = it.toMailSenderYml()
             senders[mailSenderYml.id] = mailSenderYml
         }
         saveAll()
@@ -207,7 +197,7 @@ class MailSenderYml(
 
     fun onSend(receivers: List<UUID>, sender: CommandSender = Bukkit.getConsoleSender()) {
         if (!DatabaseConfig.isConnected) {
-            sender.sendColorMessages("&c邮件 ${id} 发送失败，数据库未链接!")
+            sender.sendColorMessages("&c邮件 $id 发送失败，数据库未链接!")
         }
         if (mails.isEmpty()) {
             sender.sendColorMessages("&6没有要发送的邮件!")
@@ -222,7 +212,7 @@ class MailSenderYml(
                         mail = m.id
                         sendTime = LocalDateTime.now()
                     }
-                    MailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
+                    PlayerMailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
                     Bukkit.getPlayer(receiver)?.sendColorMessages(Lang.new_mail)
                 }
                 sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")

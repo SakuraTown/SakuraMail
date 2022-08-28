@@ -45,7 +45,12 @@ fun command() {
             addSubNode(SenderUploadCommand)
             addSubNode(SenderDownloadCommand)
         }
-
+        node(AdminCommand)
+        AdminCommand.apply {
+            addSubNode(AdminRemoveCommand)
+            addSubNode(AdminRemoveAllCommand)
+            addSubNode(AdminOpenCommand)
+        }
         node(
             "upload",
             description = "上传数据到数据库",
@@ -156,5 +161,6 @@ fun command() {
                 true
             }
         }
+
     }
 }

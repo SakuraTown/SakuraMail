@@ -25,6 +25,16 @@ object MailContentYml : SimpleYAMLConfig() {
         )
     }
 
+    @Key("accepted")
+    @Comment("", "已经领取邮件组件")
+    var acceptedSection: MemorySection = YamlConfiguration().apply {
+        set("1.slots", "49")
+        set(
+            "1.item",
+            XItemStack.serialize(ItemStack(Material.CHEST).applyMeta { setDisplayName("已领取") })
+        )
+    }
+
     @Key("back")
     @Comment("", "返回上一级组件")
     var backSection: MemorySection = YamlConfiguration().apply {
@@ -45,12 +55,15 @@ object MailContentYml : SimpleYAMLConfig() {
         )
     }
     var accepts = mutableMapOf<ItemStack, List<Int>>()
+    var accepteds = mutableMapOf<ItemStack, List<Int>>()
     var backs = mutableMapOf<ItemStack, List<Int>>()
     var delete = mutableMapOf<ItemStack, List<Int>>()
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
+
         MailBoxGUIYml.guiCaches.clear()
         accepts = MailBoxGUIYml.readSlots(acceptSection)
+        accepteds = MailBoxGUIYml.readSlots(acceptedSection)
         backs = MailBoxGUIYml.readSlots(backSection)
         delete = MailBoxGUIYml.readSlots(deleteSection)
     }

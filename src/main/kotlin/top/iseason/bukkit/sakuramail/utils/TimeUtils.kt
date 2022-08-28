@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 object TimeUtils {
-    var timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    var timeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     //获取一定时间间隔的时间，例如 "PnYnMnDTnHnMnS" 可随意组合
     fun parseRelativeTime(str: String, base: LocalDateTime = LocalDateTime.now()): LocalDateTime {
@@ -70,5 +70,5 @@ object TimeUtils {
         return if (seconds < 0) "-$positive" else positive
     }
 
-    fun formatTime(time: LocalDateTime) = time.format(timeFormat)
+    fun formatTime(time: LocalDateTime): String = time.format(timeFormat)
 }

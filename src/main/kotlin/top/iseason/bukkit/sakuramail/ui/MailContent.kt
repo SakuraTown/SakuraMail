@@ -12,13 +12,13 @@ import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.MailContentYml
 import top.iseason.bukkit.sakuramail.database.MailRecordCache
-import top.iseason.bukkit.sakuramail.database.MailRecordCaches
+import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 
 class MailContent(
     val player: Player,
-    val mail: MailRecordCache,
-    val lastUI: MailBoxPage? = null
+    private val mail: MailRecordCache,
+    private val lastUI: MailBoxPage? = null
 ) : ChestUI(
     mail.mailYml.title,
     row = MailBoxGUIYml.row,
@@ -32,19 +32,29 @@ class MailContent(
 
     }
     private val accept = Button(ItemStack(Material.AIR)).onClicked(true) {
-        transaction {
-            if (mail.getKit()) {
-                lastUI?.updateMails()
+        if (transaction { mail.getKit() }) {
+            lastUI?.updateMails()
+            //切换状态
+            MailContentYml.accepts.values.flatten().forEach {
+                (slots[it] as? Button)?.itemStack = null
+                slots[it] = null
             }
+            MailContentYml.accepteds.forEach { (item, slots) ->
+                for (slot in slots) {
+                    baseInventory?.setItem(slot, item)
+                }
+            }
+
         }
     }
+    private val accepted = Icon(ItemStack(Material.AIR), 0)
 
     private val delete = Button(ItemStack(Material.AIR)).onClicked(true) {
         if (mail.canGetKit()) {
             player.sendColorMessages(Lang.ui_delete_not_accept)
             return@onClicked
         }
-        MailRecordCaches.getPlayerCache(player).removeCache(mail)
+        PlayerMailRecordCaches.getPlayerCache(player).removeCache(mail)
         transaction { mail.remove() }
         lastUI?.updateMails()
         submit {
@@ -57,7 +67,10 @@ class MailContent(
     init {
         setUpSlots(back, MailContentYml.backs)
         setUpSlots(delete, MailContentYml.delete)
-        setUpSlots(accept, MailContentYml.accepts)
+        if (mail.canGetKit())
+            setUpSlots(accept, MailContentYml.accepts)
+        else
+            setUpSlots(accepted, MailContentYml.accepteds)
         mail.mailYml.items.forEach { (t, u) ->
             Icon(u, t).setup()
         }

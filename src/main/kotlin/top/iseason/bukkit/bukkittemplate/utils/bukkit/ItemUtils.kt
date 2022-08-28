@@ -1,5 +1,6 @@
 package top.iseason.bukkit.bukkittemplate.utils.bukkit
 
+import io.github.bananapuncher714.nbteditor.NBTEditor
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
@@ -159,7 +160,6 @@ object ItemUtils {
 
     }
 
-
     /**
      * 物品转为BASE64字符串
      */
@@ -169,5 +169,7 @@ object ItemUtils {
      * BASE64字符串转为物品
      */
     fun fromBase64(base64: String) = fromByteArray(Base64.getDecoder().decode(base64))
+
+    fun ItemStack.toJson() = NBTEditor.getNBTCompound(this).toJson()
 
 }
