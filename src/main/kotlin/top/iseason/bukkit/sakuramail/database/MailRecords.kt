@@ -149,11 +149,10 @@ class MailRecordCache(
 ) {
     lateinit var icon: ItemStack
     private var expireStr = ""
-    val mailYml = getYml()
-
     init {
         setIconAndTitle()
     }
+    val mailYml = getYml()
 
     /**
      * 设置邮件已领取
