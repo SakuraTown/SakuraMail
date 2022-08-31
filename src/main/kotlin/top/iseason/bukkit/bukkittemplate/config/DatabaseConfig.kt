@@ -9,6 +9,8 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.AutoDisable
@@ -17,9 +19,9 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
+import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.dependency.DependencyDownloader
-import top.iseason.bukkit.sakuramail.database.MySqlLogger
 import java.io.File
 
 @FilePath("database.yml")
@@ -48,14 +50,20 @@ object DatabaseConfig : SimpleYAMLConfig() {
     @Key
     var password = "password"
 
+    // table缓存
+    private var tables: Array<out Table> = emptyArray()
     var isConnected = false
-    var isConnecting = false
+        private set
+    private var isConnecting = false
     private lateinit var connection: Database
     private var ds: HikariDataSource? = null
 
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
         isAutoUpdate = autoReload
         reConnected()
+        if (tables.isNotEmpty()) {
+            initTables(*tables)
+        }
     }
 
     /**
@@ -128,12 +136,11 @@ object DatabaseConfig : SimpleYAMLConfig() {
                 poolName = BukkitTemplate.getPlugin().name
             }
             ds = HikariDataSource(config)
-            val databaseConfig = DatabaseConfig.invoke {
+            connection = Database.connect(ds!!, databaseConfig = DatabaseConfig.invoke {
                 sqlLogger = MySqlLogger
-            }
-            connection = Database.connect(ds!!, databaseConfig = databaseConfig)
+            })
             isConnected = true
-            info("&a数据库链接成功!")
+            info("&a数据库链接成功: &6$database")
         }.getOrElse {
             isConnected = false
             it.printStackTrace()
@@ -159,6 +166,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
      */
     fun initTables(vararg tables: Table) {
         if (!isConnected) return
+        this.tables = tables
         runCatching {
             transaction {
                 if (SimpleLogger.isDebug) addLogger(StdOutSqlLogger)
@@ -194,3 +202,9 @@ abstract class StringEntityClass<out E : Entity<String>> constructor(
     entityType: Class<E>? = null,
     entityCtor: ((EntityID<String>) -> E)? = null
 ) : EntityClass<String, E>(table, entityType, entityCtor)
+
+object MySqlLogger : SqlLogger {
+    override fun log(context: StatementContext, transaction: Transaction) {
+        debug("&6DEBUG SQL: &7${context.expandArgs(transaction)}")
+    }
+}

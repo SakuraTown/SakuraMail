@@ -125,7 +125,7 @@ object SenderDownloadCommand : CommandNode(
         }
         runCatching {
             MailSendersYml.download()
-        }.getOrElse { throw ParmaException("&cMailSender数据下载失异常!") }
+        }.getOrElse { throw ParmaException("&cMailSender数据下载异常!") }
         it.sendColorMessages("&aMailSender数据下载成功!")
         MailSendersYml.saveAll()
         true
