@@ -3,7 +3,7 @@ package top.iseason.bukkit.sakuramail.ui
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.jetbrains.exposed.sql.transactions.transaction
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.formatBy
@@ -25,14 +25,14 @@ class MailBoxPage(
             .replace("%sakura_mail_current_page%", (page + 1).toString())
             .replace("%sakura_mail_total_page%", mailCache.page.toString()), player
     ), row = MailBoxGUIYml.row,
-    clickDelay = 500L
+    clickDelay = MailBoxGUIYml.clickDelay
 ) {
     private var mails = mailCache.getPageCache(page)
     private var mailIndex = mutableMapOf<Int, Int>()
 
     private val icon = Icon(ItemStack(Material.AIR), 0)
 
-    private val mail = MailSlot().onClicked(true) {
+    private val mail = MailSlot(0).onClicked(true) {
         val mailIndex = mailIndex[index] ?: return@onClicked
         val mailRecordCache = mails?.getOrNull(mailIndex) ?: return@onClicked
         val build = MailContent(player, mailRecordCache, this@MailBoxPage).build()
@@ -41,14 +41,16 @@ class MailBoxPage(
         }
     }
     private val nextPage = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
-        this.getContainer()?.nextPage(player)
+        if (this.getContainer()?.size != 1)
+            this.getContainer()?.nextPage(player)
     }
     private val lastPage = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
-        this.getContainer()?.lastPage(player)
+        if (this.getContainer()?.size != 1)
+            this.getContainer()?.lastPage(player)
     }
     private val clear = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
         if (mails == null) return@onClicked
-        transaction {
+        dbTransaction {
             mails!!.forEach {
                 if (it.canGetKit()) return@forEach
                 PlayerMailRecordCaches.getPlayerCache(player).removeCache(it)
@@ -61,7 +63,7 @@ class MailBoxPage(
     private val getAll = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
         if (mails == null) return@onClicked
         var count = 0
-        transaction {
+        dbTransaction {
             for (mail in mails!!) {
                 if (!mail.canGetKit()) continue
                 if (!mail.getKitSliently()) {
@@ -93,7 +95,7 @@ class MailBoxPage(
         map.forEach { (item, list) ->
             for (i in list) {
                 val clone = slot.clone(i)
-                if (slot is MailSlot) {
+                if (clone !is MailSlot) {
                     if (clone is ClickSlot) {
                         clone.rawItemStack = PlaceHolderHook.setPlaceHolder(item, player)
                     } else if (clone is Icon) {
@@ -128,9 +130,9 @@ class MailBoxPage(
         player.updateInventory()
     }
 
-    class MailSlot : Button(ItemStack(Material.AIR), 0) {
+    class MailSlot(index: Int) : Button(ItemStack(Material.AIR), index) {
         override fun clone(index: Int): MailSlot {
-            return MailSlot().also {
+            return MailSlot(index).also {
                 it.baseInventory = baseInventory
                 it.onClick = onClick
                 it.onClicked = onClicked

@@ -5,10 +5,10 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.javatime.duration
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.StringEntity
 import top.iseason.bukkit.bukkittemplate.config.StringEntityClass
 import top.iseason.bukkit.bukkittemplate.config.StringIdTable
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 
@@ -48,7 +48,7 @@ object SystemMails : StringIdTable() {
      */
     fun <T : Comparable<T>> IdTable<T>.has(id: T): Boolean {
         return try {
-            transaction {
+            dbTransaction {
                 !this@has.slice(this@has.id).select { this@has.id eq id }.limit(1).empty()
             }
         } catch (e: Exception) {

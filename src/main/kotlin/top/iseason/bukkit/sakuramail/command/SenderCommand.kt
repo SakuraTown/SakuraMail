@@ -3,12 +3,12 @@ package top.iseason.bukkit.sakuramail.command
 import org.bukkit.command.CommandSender
 import org.bukkit.permissions.PermissionDefault
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailSenderYml
@@ -61,7 +61,7 @@ object SenderRemoveCommand : CommandNode(
             return@onExecute
         }
         val id = getParam<String>(0)
-        if (transaction { MailSenders.deleteWhere { MailSenders.id eq id } } == 0 && MailSendersYml.senders.remove(id) == null)
+        if (dbTransaction { MailSenders.deleteWhere { MailSenders.id eq id } } == 0 && MailSendersYml.senders.remove(id) == null)
             it.sendColorMessage("&cID不存在!")
         else it.sendColorMessage("&a创建成功，细节请前往配置文件修改!")
         MailSendersYml.saveAll()

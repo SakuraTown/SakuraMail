@@ -10,11 +10,11 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.EntityUtils.giveItems
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
@@ -64,7 +64,7 @@ object SystemMailsYml : SimpleYAMLConfig() {
     fun getMailYml(id: String): SystemMailYml? {
         var systemMailYml: SystemMailYml? = mails[id]
         if (systemMailYml == null) {
-            systemMailYml = transaction { SystemMail.findById(id)?.toYml() }
+            systemMailYml = dbTransaction { SystemMail.findById(id)?.toYml() }
         } else return systemMailYml
         if (systemMailYml == null) return null
         mails[id] = systemMailYml
@@ -75,7 +75,7 @@ object SystemMailsYml : SimpleYAMLConfig() {
      * 将本地数据上传至数据库
      */
     fun upload() {
-        transaction {
+        dbTransaction {
             for (value in mails.values) {
                 value.toDatabase()
             }
@@ -87,7 +87,7 @@ object SystemMailsYml : SimpleYAMLConfig() {
      */
     fun downloadFromDatabase() {
         mails.clear()
-        transaction {
+        dbTransaction {
             for (systemMail in SystemMail.find { SystemMails.type eq "system" }) {
                 mails[systemMail.id.value] = systemMail.toYml()
             }
@@ -193,7 +193,7 @@ data class SystemMailYml(
     /**
      * 上传至为数据库
      */
-    fun toDatabase(): SystemMail = transaction {
+    fun toDatabase(): SystemMail = dbTransaction {
         var mail = SystemMail.findById(this@SystemMailYml.id)
         if (mail == null) {
             mail = SystemMail.new(this@SystemMailYml.id) {

@@ -4,12 +4,12 @@ import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.permissions.PermissionDefault
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
@@ -120,7 +120,7 @@ object ReceiverRemoveCommand : CommandNode(
         val id = getParam<String>(0)
         val remove = MailReceiversYml.timeReceivers.remove(id)
         MailReceiversYml.save()
-        val count = transaction {
+        val count = dbTransaction {
             MailReceivers.deleteWhere { MailReceivers.id eq id }
         }
         if (remove == null && count == 0) throw ParmaException("&cid不存在!")

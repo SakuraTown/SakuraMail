@@ -5,12 +5,12 @@ import org.bukkit.command.CommandSender
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
@@ -106,7 +106,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      * 获取邮件发送者并缓存
      */
     fun getSender(id: String) =
-        senders[id] ?: transaction { MailSender.findById(id)?.toMailSenderYml()?.apply { senders[id] = this } }
+        senders[id] ?: dbTransaction { MailSender.findById(id)?.toMailSenderYml()?.apply { senders[id] = this } }
 
 
     /**
@@ -138,7 +138,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      * 上传数据
      */
     fun upload() {
-        transaction {
+        dbTransaction {
             senders.values.forEach { sender -> sender.toDatabase() }
         }
     }
@@ -148,7 +148,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      */
     fun download() {
         senders.clear()
-        transaction {
+        dbTransaction {
             MailSender.all()
         }.forEach {
             val mailSenderYml = it.toMailSenderYml()
@@ -203,7 +203,7 @@ class MailSenderYml(
             sender.sendColorMessage("&6没有要发送的邮件!")
             return
         }
-        transaction {
+        dbTransaction {
             for (m in mails) {
                 if (receivers.isEmpty()) continue
                 for (receiver in receivers) {

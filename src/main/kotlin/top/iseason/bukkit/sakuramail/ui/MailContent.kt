@@ -3,13 +3,12 @@ package top.iseason.bukkit.sakuramail.ui
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.jetbrains.exposed.sql.transactions.transaction
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
-import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.MailContentYml
 import top.iseason.bukkit.sakuramail.database.MailRecordCache
 import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
@@ -21,8 +20,8 @@ class MailContent(
     private val lastUI: MailBoxPage? = null
 ) : ChestUI(
     mail.mailYml.title,
-    row = MailBoxGUIYml.row,
-    clickDelay = 500L
+    row = MailContentYml.row,
+    clickDelay = MailContentYml.clickDelay
 ) {
 
     private val back = Button(ItemStack(Material.AIR)).onClicked {
@@ -32,7 +31,7 @@ class MailContent(
 
     }
     private val accept = Button(ItemStack(Material.AIR)).onClicked(true) {
-        if (transaction { mail.getKit() }) {
+        if (dbTransaction { mail.getKit() }) {
             lastUI?.updateMails()
             //切换状态
             MailContentYml.accepts.values.flatten().forEach {
@@ -55,7 +54,7 @@ class MailContent(
             return@onClicked
         }
         PlayerMailRecordCaches.getPlayerCache(player).removeCache(mail)
-        transaction { mail.remove() }
+        dbTransaction { mail.remove() }
         lastUI?.updateMails()
         submit {
             if (lastUI != null) {

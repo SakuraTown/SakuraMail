@@ -15,7 +15,6 @@ open class IOSlot(
     //没有物品时的占位符
     placeholder: ItemStack?
 ) : ClickSlot(placeholder, index) {
-
     var placeholder: ItemStack?
         get() = rawItemStack
         set(value) {
@@ -85,7 +84,6 @@ open class IOSlot(
     override fun reset() {
         itemStack = null
     }
-
 
     override fun clone(index: Int): IOSlot = IOSlot(index, placeholder).also {
         it.input = input

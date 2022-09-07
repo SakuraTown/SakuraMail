@@ -81,7 +81,6 @@ dependencies {
     compileOnly("com.zaxxer:HikariCP:4.0.3")
     compileOnly("org.quartz-scheduler:quartz:2.3.2")
     compileOnly("me.clip:placeholderapi:2.11.2")
-    compileOnly("com.github.cryptomorin:XSeries:9.0.0")
     compileOnly("com.github.LoneDev6:api-itemsadder:3.0.0")
 
     compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")

@@ -6,9 +6,9 @@ import org.bukkit.permissions.PermissionDefault
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.command.*
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
@@ -38,7 +38,7 @@ object AdminRemoveCommand : CommandNode(
         }
         val player = getParam<Player>(0).uniqueId
         val type = getParam<String>(1)
-        transaction {
+        dbTransaction {
             when (type.lowercase()) {
                 "all" -> MailRecords.deleteWhere { MailRecords.player eq player }
                 "accepted" -> MailRecords.deleteWhere { MailRecords.player eq player and (MailRecords.acceptTime neq null) }
@@ -71,7 +71,7 @@ object AdminRemoveAllCommand : CommandNode(
             return@onExecute
         }
         val type = getParam<String>(0).lowercase()
-        transaction {
+        dbTransaction {
             when (type.lowercase()) {
                 "all" -> MailRecords.deleteAll()
                 "accepted" -> MailRecords.deleteWhere { MailRecords.acceptTime neq null }

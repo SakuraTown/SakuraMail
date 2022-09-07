@@ -3,11 +3,11 @@ package top.iseason.bukkit.sakuramail
 import org.bukkit.Bukkit
 import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.KotlinPlugin
 import top.iseason.bukkit.bukkittemplate.command.CommandBuilder
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
@@ -103,7 +103,7 @@ object SakuraMail : KotlinPlugin() {
     ): Boolean {
         if (!DatabaseConfig.isConnected) return false
         runCatching {
-            transaction {
+            dbTransaction {
                 val mail = SystemMail.new(UUID.randomUUID().toString()) {
                     this.type = "temp"
                     this.icon = ExposedBlob(icon.toByteArray())

@@ -5,11 +5,11 @@ import org.bukkit.entity.Player
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.sakuramail.database.MailReceiver
 import top.iseason.bukkit.sakuramail.database.MailReceivers
 import top.iseason.bukkit.sakuramail.database.MailRecords
@@ -29,8 +29,8 @@ object MailReceiversYml : SimpleYAMLConfig() {
     /**
      * 获取某个id的目标选择器并缓存
      */
-    fun getReceiver(id: String): MutableList<String>? = timeReceivers[id] ?: transaction {
-        val findById = MailReceiver.findById(id) ?: return@transaction null
+    fun getReceiver(id: String): MutableList<String>? = timeReceivers[id] ?: dbTransaction {
+        val findById = MailReceiver.findById(id) ?: return@dbTransaction null
         val list = findById.params.split("$").toMutableList()
         timeReceivers[id] = list
         save(false)
@@ -41,7 +41,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
      * 将数据上传至数据库
      */
     fun upload() {
-        transaction {
+        dbTransaction {
             MailReceivers.deleteAll()
             timeReceivers.forEach { (key, list) ->
                 MailReceiver.new(key) {
@@ -55,7 +55,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
      * 从数据库下载数据
      */
     fun download() {
-        transaction {
+        dbTransaction {
             for (mailReceiver in MailReceiver.all()) {
                 timeReceivers[mailReceiver.id.value] = mailReceiver.params.split("$").toMutableList()
             }
@@ -91,7 +91,7 @@ object MailReceiversYml : SimpleYAMLConfig() {
         //先处理sql查询
         var resultSet = runCatching {
             val operation = PlayerTimes.parseArgs(temp, player)
-            transaction {
+            dbTransaction {
                 var resultSet = setOf<UUID>()
                 //常规查询
                 if (operation != null) {

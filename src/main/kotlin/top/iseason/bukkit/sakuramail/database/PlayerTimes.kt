@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.duration
-import org.jetbrains.exposed.sql.transactions.transaction
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.sakuramail.utils.TimeUtils
 import java.time.Duration
 import java.time.LocalDateTime
@@ -81,7 +81,7 @@ object PlayerTimes : IntIdTable() {
     ): Map<UUID, Duration> {
         val mutableMapOf = mutableMapOf<UUID, Duration>()
         val now = LocalDateTime.now()
-        transaction {
+        dbTransaction {
             for (playerTime in PlayerTime.find { loginTime.between(start, end) or loginTime.between(start, end) }) {
                 val duration = when {
                     playerTime.loginTime.isBefore(start) -> {
@@ -105,7 +105,7 @@ object PlayerTimes : IntIdTable() {
     /**
      * 获取所有数据库记录的玩家
      */
-    fun getAllPlayers() = transaction {
+    fun getAllPlayers() = dbTransaction {
         PlayerTimes.slice(player).selectAll().distinctBy { player }.map { it[player] }
     }
 

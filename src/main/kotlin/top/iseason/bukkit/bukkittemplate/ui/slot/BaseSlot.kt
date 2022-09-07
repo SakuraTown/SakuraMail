@@ -35,7 +35,6 @@ interface BaseSlot {
      */
     fun reset()
 
-
 }
 
 /**

@@ -7,12 +7,12 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.permissions.PermissionDefault
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.command.CommandNode
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.toColor
@@ -101,7 +101,7 @@ object SystemMailURemoveCommand : CommandNode(
             return@onExecute
         }
         val param = getParam<String>(0)
-        val result = transaction {
+        val result = dbTransaction {
             MailRecords.deleteWhere(1) { MailRecords.mail eq param }
             SystemMails.deleteWhere(1) { SystemMails.id eq param }
         }

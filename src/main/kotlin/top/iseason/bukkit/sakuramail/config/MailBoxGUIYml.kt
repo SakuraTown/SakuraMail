@@ -1,6 +1,5 @@
 package top.iseason.bukkit.sakuramail.config
 
-import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.MemorySection
@@ -12,7 +11,9 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.info
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toSection
 import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import top.iseason.bukkit.sakuramail.ui.MailBoxContainer
 import java.util.*
@@ -21,6 +22,10 @@ import java.util.*
 object MailBoxGUIYml : SimpleYAMLConfig() {
 
     var guiCaches = mutableMapOf<UUID, MailBoxContainer>()
+
+    @Key
+    @Comment("", "点击间隔，防止操作过快的数据库异常")
+    var clickDelay: Long = 500
 
     @Key
     @Comment("", "邮箱的标题")
@@ -36,12 +41,11 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
         set("1.slots", "47,48,50,51")
         set(
             "1.item",
-            XItemStack.serialize(ItemStack(Material.GRAY_STAINED_GLASS_PANE).applyMeta { setDisplayName("") })
+            ItemStack(Material.GRAY_STAINED_GLASS_PANE).applyMeta { setDisplayName("") }.toSection()
         )
         set("2.slots", "49")
         set(
-            "2.item",
-            XItemStack.serialize(ItemStack(Material.NETHER_STAR).applyMeta { setDisplayName("你的邮件") })
+            "2.item", ItemStack(Material.NETHER_STAR).applyMeta { setDisplayName("你的邮件") }.toSection()
         )
     }
 
@@ -50,8 +54,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var mailSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", (0..row * 9 - 10).joinToString(",") { it.toString() })
         set(
-            "1.item",
-            XItemStack.serialize(ItemStack(Material.AIR))
+            "1.item", ItemStack(Material.AIR).toSection()
         )
     }
 
@@ -60,8 +63,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var nextPageSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "46")
         set(
-            "1.item",
-            XItemStack.serialize(ItemStack(Material.PAPER).applyMeta { setDisplayName("下一页") })
+            "1.item", ItemStack(Material.PAPER).applyMeta { setDisplayName("下一页") }.toSection()
         )
     }
 
@@ -70,8 +72,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var lastPageSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "45")
         set(
-            "1.item",
-            XItemStack.serialize(ItemStack(Material.PAPER).applyMeta { setDisplayName("上一页") })
+            "1.item", ItemStack(Material.PAPER).applyMeta { setDisplayName("上一页") }.toSection()
         )
     }
 
@@ -80,8 +81,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var getAllSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "52")
         set(
-            "1.item",
-            XItemStack.serialize(ItemStack(Material.CHEST).applyMeta { setDisplayName("全部领取") })
+            "1.item", ItemStack(Material.CHEST).applyMeta { setDisplayName("全部领取") }.toSection()
         )
     }
 
@@ -90,8 +90,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
     var clearAcceptedSection: MemorySection = YamlConfiguration().apply {
         set("1.slots", "53")
         set(
-            "1.item",
-            XItemStack.serialize(ItemStack(Material.ANVIL).applyMeta { setDisplayName("清除已领取") })
+            "1.item", ItemStack(Material.ANVIL).applyMeta { setDisplayName("清除已领取") }.toSection()
         )
     }
     var icons = mutableMapOf<ItemStack, List<Int>>()
@@ -129,18 +128,12 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
                 val slots = (section2.getString("slots") ?: "").trim().split(",").mapNotNull {
                     runCatching { it.toInt() }.getOrNull()
                 }
-                val itemSection = section2["item"]
+                val itemsAdder = section2.getString("item")
                 var item: ItemStack? = null
-                if (itemSection is String) item = ItemsAdderHook.getItemsAdderItem(itemSection)
+                if (itemsAdder != null) item = ItemsAdderHook.getItemsAdderItem(itemsAdder)
                 if (item == null) {
-                    val itemMap =
-                        if (itemSection is Map<*, *>) itemSection as Map<String, Any>
-                        else (itemSection as MemorySection).getValues(true)
-                    item = runCatching {
-                        XItemStack.deserialize(itemMap)
-                    }.getOrElse {
-                        ItemStack(Material.AIR)
-                    }
+                    val section3 = section2.getConfigurationSection("item")
+                    item = runCatching { ItemUtils.fromSection(section3!!)!! }.getOrElse { ItemStack(Material.AIR) }
                 }
                 mutableMapOf[item] = slots
             }

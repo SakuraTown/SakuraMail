@@ -8,8 +8,8 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
+import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.formatBy
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.submit
@@ -29,7 +29,7 @@ object PlayerListener : Listener {
      */
     fun onLogin(player: Player) {
         if (!DatabaseConfig.isConnected) return
-        transaction {
+        dbTransaction {
             PlayerTime.new {
                 this.player = player.uniqueId
                 this.loginTime = LocalDateTime.now()
@@ -42,11 +42,11 @@ object PlayerListener : Listener {
      */
     fun onQuit(player: Player) {
         if (!DatabaseConfig.isConnected) return
-        transaction {
+        dbTransaction {
             val login = PlayerTime.find { PlayerTimes.player eq player.uniqueId }
                 .orderBy(PlayerTimes.id to SortOrder.DESC)
-                .limit(1).firstOrNull() ?: return@transaction
-            if (login.quitTime != null) return@transaction
+                .limit(1).firstOrNull() ?: return@dbTransaction
+            if (login.quitTime != null) return@dbTransaction
             login.quitTime = LocalDateTime.now()
             login.playTime = Duration.between(login.loginTime, login.quitTime)
         }
@@ -62,11 +62,11 @@ object PlayerListener : Listener {
             }
             onLogin(event.player)
             if (Lang.login_tip.trim().isEmpty()) return@submit
-            transaction {
+            dbTransaction {
                 val count = MailRecords.slice(MailRecords.id)
                     .select { MailRecords.player eq event.player.uniqueId and (MailRecords.acceptTime eq null) }
                     .count()
-                if (count == 0L) return@transaction
+                if (count == 0L) return@dbTransaction
                 event.player.sendColorMessage(Lang.login_tip.formatBy(count))
             }
         }
