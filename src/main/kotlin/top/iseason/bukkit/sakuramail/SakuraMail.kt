@@ -10,8 +10,10 @@ import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.EventUtils.register
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArray
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArrays
 import top.iseason.bukkit.sakuramail.command.command
 import top.iseason.bukkit.sakuramail.config.*
 import top.iseason.bukkit.sakuramail.database.*
@@ -44,8 +46,8 @@ object SakuraMail : KotlinPlugin() {
         MailSendersYml.load(false)
         MailContentYml.load(false)
         MailBoxGUIYml.load(false)
-        registerListeners(PlayerListener)
-        registerListeners(UIListener)
+        PlayerListener.register()
+        UIListener.register()
         command()
         CommandBuilder.updateCommands()
         runCatching {
@@ -104,10 +106,10 @@ object SakuraMail : KotlinPlugin() {
             transaction {
                 val mail = SystemMail.new(UUID.randomUUID().toString()) {
                     this.type = "temp"
-                    this.icon = ExposedBlob(ItemUtils.toByteArray(icon))
+                    this.icon = ExposedBlob(icon.toByteArray())
                     this.title = title
                     if (items.isNotEmpty())
-                        this.items = ExposedBlob(ItemUtils.toByteArrays(items))
+                        this.items = ExposedBlob(items.toByteArrays())
                     if (commands.isNotEmpty())
                         this.commands = commands.joinToString(";")
                     this.expire = expire
@@ -118,7 +120,7 @@ object SakuraMail : KotlinPlugin() {
                     this.sendTime = LocalDateTime.now()
                 }
                 PlayerMailRecordCaches.getPlayerCache(uuid)?.insertRecord(new)
-                Bukkit.getPlayer(uuid)?.sendColorMessages(Lang.new_mail)
+                Bukkit.getPlayer(uuid)?.sendColorMessage(Lang.new_mail)
             }
         }.getOrElse { return false }
 

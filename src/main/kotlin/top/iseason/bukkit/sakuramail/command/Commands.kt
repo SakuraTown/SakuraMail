@@ -7,7 +7,7 @@ import top.iseason.bukkit.bukkittemplate.command.ParamSuggestCache
 import top.iseason.bukkit.bukkittemplate.command.commandRoot
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessages
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 
@@ -61,7 +61,7 @@ fun command() {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
-                    return@onExecute true
+                    return@onExecute
                 }
                 when (getParam<String>(0).lowercase()) {
                     "sender" -> SenderUploadCommand.onExecute?.invoke(this, it)
@@ -73,7 +73,6 @@ fun command() {
                         ReceiverUploadCommand.onExecute?.invoke(this, it)
                     }
                 }
-                true
             }
         }
         node(
@@ -86,7 +85,7 @@ fun command() {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
-                    return@onExecute true
+                    return@onExecute
                 }
                 when (getParam<String>(0).lowercase()) {
                     "sender" -> SenderDownloadCommand.onExecute?.invoke(this, it)
@@ -98,7 +97,6 @@ fun command() {
                         ReceiverDownloadCommand.onExecute?.invoke(this, it)
                     }
                 }
-                true
             }
         }
         node(
@@ -110,13 +108,12 @@ fun command() {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
-                    return@onExecute true
+                    return@onExecute
                 }
                 val player = it as Player
                 val playerUI = MailBoxGUIYml.getPlayerUI(player)
                 playerUI.update()
                 playerUI.openFor(player)
-                true
             }
         }
         node(
@@ -129,13 +126,12 @@ fun command() {
             onExecute {
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
-                    return@onExecute true
+                    return@onExecute
                 }
                 val player = getParam<Player>(0)
                 val playerUI = MailBoxGUIYml.getPlayerUI(player)
                 playerUI.update()
                 playerUI.openFor(player)
-                true
             }
         }
         node(
@@ -147,7 +143,6 @@ fun command() {
             onExecute {
                 SimpleLogger.isDebug = !SimpleLogger.isDebug
                 it.sendColorMessages("&a调试模式: &6${SimpleLogger.isDebug}")
-                true
             }
         }
         node(
@@ -158,7 +153,7 @@ fun command() {
         ) {
             onExecute {
                 DatabaseConfig.reConnected()
-                true
+                it.sendColorMessages("&a操作完成!")
             }
         }
 

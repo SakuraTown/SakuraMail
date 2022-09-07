@@ -12,29 +12,33 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
-import top.iseason.bukkit.bukkittemplate.AutoDisable
+import top.iseason.bukkit.bukkittemplate.DisableHook
 import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.ui.container.BaseUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.ClickSlot
 import top.iseason.bukkit.bukkittemplate.ui.slot.IOSlot
 import top.iseason.bukkit.bukkittemplate.ui.slot.merge
 import top.iseason.bukkit.bukkittemplate.utils.WeakCoolDown
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.checkAir
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.subtract
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.checkAir
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.subtract
 import top.iseason.bukkit.bukkittemplate.utils.submit
 
 /**
  * 负责所有UI的监听动作
  */
-object UIListener : AutoDisable(), Listener {
+object UIListener : Listener {
 
     //    private val playerClickTime = mutableMapOf<HumanEntity, Long>()
     private val clickCoolDown = WeakCoolDown<HumanEntity>()
 
+    init {
+        DisableHook.addTask { onDisable() }
+    }
+
     /**
      * 在插件注销时关闭所有UI
      */
-    override fun onDisable() {
+    fun onDisable() {
         Bukkit.getOnlinePlayers().forEach {
             val baseUI = BaseUI.fromInventory(it.openInventory.topInventory) ?: return
             runCatching {
@@ -173,7 +177,7 @@ fun InventoryClickEvent.ioEvent() {
         PLACE_SOME -> {
             if (rawSlot in 0 until inventory.size) {
                 //处理占位符
-                inputItem = if (cursor?.type?.checkAir() == true) null
+                inputItem = if (cursor.checkAir()) null
                 else Pair(rawSlot, cursor!!.clone()).apply {
                     if (action == PLACE_ONE) second.amount = 1
                     val currentItem = currentItem

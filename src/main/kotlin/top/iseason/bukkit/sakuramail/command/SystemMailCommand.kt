@@ -14,10 +14,10 @@ import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.getHeldItem
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
-import top.iseason.bukkit.bukkittemplate.utils.submit
-import top.iseason.bukkit.bukkittemplate.utils.toColor
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.toColor
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.EntityUtils.getHeldItem
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.IOUtils.onItemInput
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml
@@ -25,7 +25,6 @@ import top.iseason.bukkit.sakuramail.database.MailRecords
 import top.iseason.bukkit.sakuramail.database.PlayerMailRecordCaches
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.database.SystemMails.has
-import top.iseason.bukkit.sakuramail.utils.IOUtils.onItemInput
 
 object SystemMailCommand : CommandNode(
     name = "systemMail",
@@ -40,26 +39,23 @@ object SystemMailCreateCommand : CommandNode(
     params = arrayOf(Param("<id>"), Param("[title]")),
     async = true
 ) {
-    override var onExecute: (Params.(CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         val id = getParam<String>(0)
         if (SystemMails.has(id)) throw ParmaException("&cid已存在!")
         val title = getOptionalParam<String>(1)?.toColor() ?: ""
-        val heldItem = (it as? Player)?.inventory?.getHeldItem() ?: ItemStack(Material.STONE)
+        val heldItem = (it as? Player)?.getHeldItem() ?: ItemStack(Material.STONE)
         val systemMailYml = SystemMailYml(id, heldItem, title)
-        if (it !is Player) return@onExecute true
-        submit {
-            it.onItemInput(async = true) { inv ->
-                val mutableMapOf = mutableMapOf<Int, ItemStack>()
-                inv.contents.forEachIndexed { index, itemStack ->
-                    if (itemStack == null) return@forEachIndexed
-                    mutableMapOf[index] = itemStack
-                }
-                systemMailYml.items = mutableMapOf
-                SystemMailsYml.mails[systemMailYml.id] = systemMailYml
-                SystemMailsYml.saveToYml()
+        if (it !is Player) return@onExecute
+        it.onItemInput(async = true) { inv ->
+            val mutableMapOf = mutableMapOf<Int, ItemStack>()
+            inv.contents.forEachIndexed { index, itemStack ->
+                if (itemStack == null) return@forEachIndexed
+                mutableMapOf[index] = itemStack
             }
+            systemMailYml.items = mutableMapOf
+            SystemMailsYml.mails[systemMailYml.id] = systemMailYml
+            SystemMailsYml.saveToYml()
         }
-        true
     }
 }
 
@@ -71,24 +67,23 @@ object SystemMailEditCommand : CommandNode(
     isPlayerOnly = true,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(CommandSender) -> Unit)? = {
         val player = it as Player
         val id = getParam<String>(0)
         val mailYml = SystemMailsYml.getMailYml(id) ?: throw ParmaException("邮件不存在!")
         val createInventory = Bukkit.createInventory(null, 54, "&a请输入物品".toColor())
         mailYml.items.forEach { (i, itemStack) -> createInventory.setItem(i, itemStack) }
-        submit {
-            player.onItemInput(createInventory, true) { inv ->
-                val mutableMapOf = mutableMapOf<Int, ItemStack>()
-                inv.contents.forEachIndexed { index, itemStack ->
-                    if (itemStack == null) return@forEachIndexed
-                    mutableMapOf[index] = itemStack
-                }
-                mailYml.items = mutableMapOf
-                SystemMailsYml.saveToYml()
-                player.sendColorMessages("&a邮件已保存!")
+        player.onItemInput(createInventory, true) { inv ->
+            val mutableMapOf = mutableMapOf<Int, ItemStack>()
+            inv.contents.forEachIndexed { index, itemStack ->
+                if (itemStack == null) return@forEachIndexed
+                mutableMapOf[index] = itemStack
             }
+            mailYml.items = mutableMapOf
+            SystemMailsYml.saveToYml()
+            player.sendColorMessage("&a邮件已保存!")
         }
+
         true
     }
 }
@@ -100,10 +95,10 @@ object SystemMailURemoveCommand : CommandNode(
     params = arrayOf(Param("<id>", suggestRuntime = { SystemMailsYml.mails.keys })),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val param = getParam<String>(0)
         val result = transaction {
@@ -111,15 +106,14 @@ object SystemMailURemoveCommand : CommandNode(
             SystemMails.deleteWhere(1) { SystemMails.id eq param }
         }
         if (result == 0 && SystemMailsYml.mails.remove(param) == null)
-            it.sendColorMessages("&a邮件不存在!")
+            it.sendColorMessage("&a邮件不存在!")
         else {
-            it.sendColorMessages("&a邮件已删除!")
+            it.sendColorMessage("&a邮件已删除!")
             PlayerMailRecordCaches.clear()
             //关闭打开的UI，强制刷新
             UIListener.onDisable()
         }
         SystemMailsYml.saveToYml()
-        true
     }
 }
 
@@ -130,17 +124,16 @@ object SystemMailUploadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         runCatching { SystemMailsYml.upload() }.getOrElse { error ->
             error.printStackTrace()
             throw ParmaException("&cSystemMail数据上传异常!")
         }
-        it.sendColorMessages("&aSystemMail数据上传成功!")
-        true
+        it.sendColorMessage("&aSystemMail数据上传成功!")
     }
 }
 
@@ -150,16 +143,15 @@ object SystemMailDownloadCommand : CommandNode(
     default = PermissionDefault.OP,
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         runCatching { SystemMailsYml.downloadFromDatabase() }.getOrElse { error ->
             error.printStackTrace()
             throw ParmaException("&cSystemMail数据下载异常!")
         }
-        it.sendColorMessages("&aSystemMail数据下载成功!")
-        true
+        it.sendColorMessage("&aSystemMail数据下载成功!")
     }
 }

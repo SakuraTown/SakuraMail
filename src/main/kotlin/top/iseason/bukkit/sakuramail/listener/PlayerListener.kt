@@ -10,8 +10,8 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
-import top.iseason.bukkit.bukkittemplate.utils.formatBy
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.formatBy
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
@@ -67,7 +67,7 @@ object PlayerListener : Listener {
                     .select { MailRecords.player eq event.player.uniqueId and (MailRecords.acceptTime eq null) }
                     .count()
                 if (count == 0L) return@transaction
-                event.player.sendColorMessages(Lang.login_tip.formatBy(count))
+                event.player.sendColorMessage(Lang.login_tip.formatBy(count))
             }
         }
     }

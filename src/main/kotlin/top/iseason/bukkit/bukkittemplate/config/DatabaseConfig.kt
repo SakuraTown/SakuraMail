@@ -13,12 +13,11 @@ import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import top.iseason.bukkit.bukkittemplate.AutoDisable
 import top.iseason.bukkit.bukkittemplate.BukkitTemplate
+import top.iseason.bukkit.bukkittemplate.DisableHook
 import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
-import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.dependency.DependencyDownloader
@@ -58,6 +57,10 @@ object DatabaseConfig : SimpleYAMLConfig() {
     private lateinit var connection: Database
     private var ds: HikariDataSource? = null
 
+    init {
+        DisableHook.addTask { closeDB() }
+    }
+
     override val onLoaded: (ConfigurationSection.() -> Unit) = {
         isAutoUpdate = autoReload
         reConnected()
@@ -73,7 +76,6 @@ object DatabaseConfig : SimpleYAMLConfig() {
         if (isConnecting) return
         info("&6数据库链接中...")
         isConnecting = true
-        AutoClose
         closeDB()
         runCatching {
             val dd = DependencyDownloader().apply {
@@ -108,7 +110,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
 
                 "PostgreSQL" -> HikariConfig().apply {
                     dd.downloadDependency("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
-                    jdbcUrl = "jdbc:postgresql://$url/$dbName"
+                    jdbcUrl = "jdbc:pgsql://$url/$dbName"
                     driverClassName = "com.impossibl.postgres.jdbc.PGDriver"
                 }
 
@@ -169,17 +171,11 @@ object DatabaseConfig : SimpleYAMLConfig() {
         this.tables = tables
         runCatching {
             transaction {
-                if (SimpleLogger.isDebug) addLogger(StdOutSqlLogger)
                 SchemaUtils.create(*tables)
             }
         }.getOrElse { it.printStackTrace() }
     }
 
-    object AutoClose : AutoDisable() {
-        override fun onDisable() {
-            closeDB()
-        }
-    }
 }
 
 /**

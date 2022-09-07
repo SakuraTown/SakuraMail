@@ -1,5 +1,6 @@
 package top.iseason.bukkit.sakuramail.database
 
+import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.javatime.duration
@@ -74,7 +75,7 @@ class SystemMail(
     fun toYml(): SystemMailYml {
         val systemMailYml = SystemMailYml(id.value, ItemUtils.fromByteArray(icon.bytes), title)
         if (items != null) {
-            systemMailYml.items = ItemUtils.fromByteArraysToMap(items!!.bytes)
+            systemMailYml.items = ItemUtils.fromByteArraysToMap(items!!.bytes) as MutableMap<Int, ItemStack>
         }
         if (commands != null) {
             systemMailYml.commands = commands!!.split(";").toMutableList()

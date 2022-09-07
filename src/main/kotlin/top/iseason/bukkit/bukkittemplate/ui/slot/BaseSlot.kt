@@ -35,16 +35,7 @@ interface BaseSlot {
      */
     fun reset()
 
-    var serializeId: String
 
-}
-
-/**
- * 设置序列化id，用于序列化,必须设置
- */
-fun <T : BaseSlot> T.serializeId(serializeId: String): T {
-    this.serializeId = serializeId
-    return this
 }
 
 /**

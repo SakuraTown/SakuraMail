@@ -1,6 +1,5 @@
 package top.iseason.bukkit.sakuramail.config
 
-import com.cryptomorin.xseries.XItemStack
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -16,11 +15,14 @@ import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
-import top.iseason.bukkit.bukkittemplate.debug.info
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.EntityUtils.giveItems
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.canAddItem
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.canAddItem
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toBase64
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArray
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArrays
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toSection
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml.isEncrypted
@@ -122,7 +124,7 @@ data class SystemMailYml(
      */
     fun apply(player: Player): Boolean {
         val filter = items.values.filter { !it.isFakeItem() }
-        val canAddItem = player.inventory.canAddItem(*filter.toTypedArray())
+        val canAddItem = player.canAddItem(*filter.toTypedArray())
         if (canAddItem > 0) return false
         player.giveItems(filter)
         submit {
@@ -171,25 +173,17 @@ data class SystemMailYml(
     fun toSection(): ConfigurationSection {
         val section = YamlConfiguration()
         section["id"] = id
-        section["icon"] = XItemStack.serialize(icon)
+        section["icon"] = ItemsAdderHook.getItemsAdderItem(icon)?.id ?: icon.toSection()
         section["title"] = title
         section["expire"] = expire
         if (items.isNotEmpty()) {
             if (isEncrypted) {
-                section["items"] = ItemUtils.toBase64(items)
+                section["items"] = items.toBase64()
             } else {
-                val itemSection = section.createSection("items")
-                items.forEach { (t, u) ->
-                    runCatching {
-                        itemSection[t.toString()] = XItemStack.serialize(u)
-                    }.getOrElse {
-                        info("&6序号 $t 的物品序列化失败!")
-                    }
-                }
+                section["items"] = items.toSection()
             }
             section["fakeItems"] = items.mapNotNull {
-                if (it.value.isFakeItem()) it.key
-                else null
+                if (it.value.isFakeItem()) it.key else null
             }.joinToString(",")
         }
         section["commands"] = commands
@@ -215,10 +209,10 @@ data class SystemMailYml(
      * 更新数据
      */
     private fun SystemMail.update() {
-        this.icon = ExposedBlob(ItemUtils.toByteArray(this@SystemMailYml.icon))
+        this.icon = ExposedBlob(this@SystemMailYml.icon.toByteArray())
         this.title = this@SystemMailYml.title
         if (this@SystemMailYml.items.isNotEmpty()) {
-            this.items = ExposedBlob(ItemUtils.toByteArrays(this@SystemMailYml.items))
+            this.items = ExposedBlob(this@SystemMailYml.items.toByteArrays())
         }
         if (this@SystemMailYml.commands.isNotEmpty()) {
             this.commands = this@SystemMailYml.commands.joinToString(";")
@@ -238,7 +232,7 @@ data class SystemMailYml(
             val iconSection = section["icon"]
             var icon: ItemStack? = null
             if (iconSection is String) icon = ItemsAdderHook.getItemsAdderItem(iconSection)
-            else if (iconSection is ConfigurationSection) icon = XItemStack.deserialize(iconSection)
+            else if (iconSection is ConfigurationSection) icon = ItemUtils.fromSection(iconSection)
             if (icon == null) icon = ItemStack(Material.AIR)
             val title = section.getString("title") ?: ""
             val systemMailYml = SystemMailYml(id, icon, title)
@@ -253,17 +247,13 @@ data class SystemMailYml(
                     for (fake in fakes) {
                         fromBase64ToMap[fake]?.setFakeItem()
                     }
-                    systemMailYml.items = fromBase64ToMap
+                    systemMailYml.items = fromBase64ToMap as MutableMap
                 }
             } else {
-                val mutableMapOf = mutableMapOf<Int, ItemStack>()
                 val itemSection = section.getConfigurationSection("items")
-                itemSection?.getKeys(false)?.forEach {
-                    val toInt = kotlin.runCatching { it.toInt() }.getOrNull() ?: return@forEach
-                    val s = itemSection.getConfigurationSection(it) ?: return@forEach
-                    mutableMapOf[toInt] = XItemStack.deserialize(s)
+                if (itemSection != null) {
+                    systemMailYml.items = ItemUtils.fromSectionToMap(itemSection) as MutableMap
                 }
-                systemMailYml.items = mutableMapOf
             }
             systemMailYml.commands = section.getStringList("commands")
             return systemMailYml

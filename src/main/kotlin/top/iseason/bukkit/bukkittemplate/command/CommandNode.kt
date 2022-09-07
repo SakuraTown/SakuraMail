@@ -10,9 +10,9 @@ import org.bukkit.permissions.Permission
 import org.bukkit.permissions.PermissionDefault
 import top.iseason.bukkit.bukkittemplate.BukkitTemplate
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.WeakCoolDown
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessage
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import java.util.*
 
@@ -49,7 +49,7 @@ open class CommandNode(
     /**
      * 命令执行
      */
-    open var onExecute: (Params.(sender: CommandSender) -> Boolean)? = null
+    open var onExecute: (Params.(sender: CommandSender) -> Unit)? = null
 ) : CommandExecutor, TabExecutor {
     var permission: Permission =
         Permission("${BukkitTemplate.getPlugin().name.lowercase()}.$name.", default)
@@ -83,8 +83,6 @@ open class CommandNode(
     /**
      * 参数类型和建议参数
      */
-    var successMessage: String? = CommandNode.successMessage
-    var failureMessage: String? = CommandNode.failureMessage
     var noPermissionMessage: String? = CommandNode.noPermissionMessage
 
     /**
@@ -178,7 +176,6 @@ open class CommandNode(
             }
             node = subNode
         }
-//        println(node.name)
         val keys = node.getKeys(sender)
         if (keys.isEmpty() && node.params.isNotEmpty()) {
             val last = args.last()
@@ -222,13 +219,7 @@ open class CommandNode(
         }
         submit(async = node.async) {
             try {
-                if (node.onExecute!!.invoke((Params(params, node)), sender)) {
-                    if (node.successMessage != null)
-                        sender.sendColorMessage(node.successMessage)
-                } else if (node.failureMessage != null) sender.sendColorMessage(
-                    node.failureMessage,
-                    SimpleLogger.prefix
-                )
+                node.onExecute!!.invoke((Params(params, node)), sender)
             } catch (e: ParmaException) {
                 //参数错误的提示
                 if (e.typeParam != null) sender.sendColorMessage(e.typeParam.errorMessage(e.arg))

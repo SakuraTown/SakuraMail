@@ -8,9 +8,9 @@ import org.bukkit.permissions.Permission
 import org.bukkit.permissions.PermissionDefault
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.SimplePluginManager
-import top.iseason.bukkit.bukkittemplate.AutoDisable
 import top.iseason.bukkit.bukkittemplate.BukkitTemplate
-import top.iseason.bukkit.bukkittemplate.utils.toColor
+import top.iseason.bukkit.bukkittemplate.DisableHook
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.toColor
 import java.lang.reflect.Constructor
 import java.util.*
 import java.util.stream.Collectors
@@ -21,24 +21,8 @@ class CommandBuilder(private val commandNode: CommandNode) {
     /**
      * 节点执行代码
      */
-    fun onExecute(onExecute: Params.(sender: CommandSender) -> Boolean): CommandBuilder {
+    fun onExecute(onExecute: Params.(sender: CommandSender) -> Unit): CommandBuilder {
         commandNode.onExecute = onExecute
-        return this
-    }
-
-    /**
-     * 执行失败的提示信息
-     */
-    fun onFailure(onFailure: String): CommandBuilder {
-        commandNode.failureMessage = onFailure
-        return this
-    }
-
-    /**
-     * 执行成功的提示信息
-     */
-    fun onSuccess(onSuccess: String): CommandBuilder {
-        commandNode.successMessage = onSuccess
         return this
     }
 
@@ -57,6 +41,17 @@ class CommandBuilder(private val commandNode: CommandNode) {
         this.commandNode.addSubNode(commandNode)
         pluginPermissions.add(commandNode.permission)
         return CommandBuilder(commandNode)
+    }
+
+    /**
+     * 添加节点
+     */
+    fun node(commandNode: CommandNode, onScope: (CommandBuilder.() -> Unit)? = null): CommandBuilder {
+        this.commandNode.addSubNode(commandNode)
+        pluginPermissions.add(commandNode.permission)
+        val commandBuilder = CommandBuilder(commandNode)
+        onScope?.invoke(commandBuilder)
+        return commandBuilder
     }
 
     /**
@@ -104,7 +99,7 @@ class CommandBuilder(private val commandNode: CommandNode) {
         return commandBuilder
     }
 
-    companion object : AutoDisable() {
+    companion object {
         private val pluginPermissions = mutableSetOf<Permission>()
         private val registeredCommands = mutableListOf<PluginCommand>()
         private val simpleCommandMap: SimpleCommandMap
@@ -115,6 +110,7 @@ class CommandBuilder(private val commandNode: CommandNode) {
             val commandMapField = SimplePluginManager::class.java.getDeclaredField("commandMap")
             commandMapField.isAccessible = true
             simpleCommandMap = commandMapField.get(simplePluginManager) as SimpleCommandMap
+            DisableHook.addTask { onDisable() }
         }
 
         private fun getPluginCommandConstructor(): Constructor<PluginCommand> {
@@ -166,7 +162,7 @@ class CommandBuilder(private val commandNode: CommandNode) {
         }
 
         @JvmStatic
-        override fun onDisable() {
+        fun onDisable() {
             clearPermissions()
             unregisterAll()
         }

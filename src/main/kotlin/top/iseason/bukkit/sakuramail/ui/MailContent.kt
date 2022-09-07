@@ -6,7 +6,7 @@ import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
@@ -51,7 +51,7 @@ class MailContent(
 
     private val delete = Button(ItemStack(Material.AIR)).onClicked(true) {
         if (mail.canGetKit()) {
-            player.sendColorMessages(Lang.ui_delete_not_accept)
+            player.sendColorMessage(Lang.ui_delete_not_accept)
             return@onClicked
         }
         PlayerMailRecordCaches.getPlayerCache(player).removeCache(mail)

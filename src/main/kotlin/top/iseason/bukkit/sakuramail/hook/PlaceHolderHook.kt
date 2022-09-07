@@ -5,8 +5,8 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import top.iseason.bukkit.bukkittemplate.debug.info
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
-import top.iseason.bukkit.bukkittemplate.utils.toColor
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.toColor
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
 
 object PlaceHolderHook {
     val placeholder = Bukkit.getPluginManager().getPlugin("PlaceholderAPI")

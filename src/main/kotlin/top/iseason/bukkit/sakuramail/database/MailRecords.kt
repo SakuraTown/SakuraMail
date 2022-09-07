@@ -11,8 +11,8 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.config.SystemMailYml
@@ -178,14 +178,14 @@ class MailRecordCache(
      */
     fun getKit(): Boolean {
         if (!canGetKit()) {
-            player.sendColorMessages(Lang.ui_get_has_accepted)
+            player.sendColorMessage(Lang.ui_get_has_accepted)
             return false
         }
         return if (!mailYml.apply(player)) {
-            player.sendColorMessages(Lang.ui_get_no_space)
+            player.sendColorMessage(Lang.ui_get_no_space)
             false
         } else {
-            player.sendColorMessages(Lang.ui_get_success)
+            player.sendColorMessage(Lang.ui_get_success)
             setAccepted()
             setIconAndTitle()
             true

@@ -1,7 +1,6 @@
 package top.iseason.bukkit.bukkittemplate.ui.container
 
 import org.bukkit.entity.HumanEntity
-import top.iseason.bukkit.bukkittemplate.utils.submit
 
 /**
  * 多页UI
@@ -44,10 +43,7 @@ open class UIContainer(
      */
     open fun nextPage(player: HumanEntity) {
         val next = ((viewers[player] ?: 0) + 1) % size
-        val inventory = setPage(next, player)?.inventory ?: return
-        submit {
-            player.openInventory(inventory)
-        }
+        player.openInventory(setPage(next, player)?.inventory ?: return)
     }
 
     /**
@@ -56,10 +52,7 @@ open class UIContainer(
     open fun lastPage(player: HumanEntity) {
         var last = (viewers[player] ?: 0) - 1
         if (last < 0) last += size
-        val inventory = setPage(last, player)?.inventory ?: return
-        submit {
-            player.openInventory(inventory)
-        }
+        player.openInventory(setPage(last, player)?.inventory ?: return)
     }
 
     /**
@@ -80,7 +73,6 @@ open class UIContainer(
         val currentPage = getCurrentPage(player) ?: return
         player.openInventory(currentPage.inventory)
     }
-
 
     /**
      * 复制

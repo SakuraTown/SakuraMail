@@ -6,8 +6,8 @@ import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.ui.container.ChestUI
 import top.iseason.bukkit.bukkittemplate.ui.slot.*
-import top.iseason.bukkit.bukkittemplate.utils.formatBy
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.formatBy
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.bukkittemplate.utils.submit
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
@@ -32,7 +32,7 @@ class MailBoxPage(
 
     private val icon = Icon(ItemStack(Material.AIR), 0)
 
-    private val mail = Button(ItemStack(Material.AIR), 0).serializeId("mail").onClicked(true) {
+    private val mail = MailSlot().onClicked(true) {
         val mailIndex = mailIndex[index] ?: return@onClicked
         val mailRecordCache = mails?.getOrNull(mailIndex) ?: return@onClicked
         val build = MailContent(player, mailRecordCache, this@MailBoxPage).build()
@@ -56,7 +56,7 @@ class MailBoxPage(
             }
         }
         updateMails()
-        player.sendColorMessages(Lang.ui_clear_success)
+        player.sendColorMessage(Lang.ui_clear_success)
     }
     private val getAll = Button(ItemStack(Material.PAPER), 0).onClicked(true) {
         if (mails == null) return@onClicked
@@ -65,18 +65,18 @@ class MailBoxPage(
             for (mail in mails!!) {
                 if (!mail.canGetKit()) continue
                 if (!mail.getKitSliently()) {
-                    player.sendColorMessages(Lang.ui_getAll_no_space)
+                    player.sendColorMessage(Lang.ui_getAll_no_space)
                     break
                 }
                 count++
             }
         }
         if (count == 0) {
-            player.sendColorMessages(Lang.ui_getAll_no_mail)
+            player.sendColorMessage(Lang.ui_getAll_no_mail)
             return@onClicked
         }
         updateMails()
-        player.sendColorMessages(Lang.ui_getAll_success.formatBy(count))
+        player.sendColorMessage(Lang.ui_getAll_success.formatBy(count))
     }
 
     init {
@@ -93,7 +93,7 @@ class MailBoxPage(
         map.forEach { (item, list) ->
             for (i in list) {
                 val clone = slot.clone(i)
-                if ("mail" != clone.serializeId) {
+                if (slot is MailSlot) {
                     if (clone is ClickSlot) {
                         clone.rawItemStack = PlaceHolderHook.setPlaceHolder(item, player)
                     } else if (clone is Icon) {
@@ -112,8 +112,7 @@ class MailBoxPage(
         val iterator = mails?.iterator()
         var index = 0
         slots.forEach {
-            if ("mail" != it?.serializeId) return@forEach
-            if (it !is Button) return@forEach
+            if (it !is MailSlot) return@forEach
             if (iterator != null && iterator.hasNext()) {
                 val stack = iterator.next().icon
                 it.rawItemStack = stack
@@ -127,6 +126,17 @@ class MailBoxPage(
 
         }
         player.updateInventory()
+    }
+
+    class MailSlot : Button(ItemStack(Material.AIR), 0) {
+        override fun clone(index: Int): MailSlot {
+            return MailSlot().also {
+                it.baseInventory = baseInventory
+                it.onClick = onClick
+                it.onClicked = onClicked
+                it.asyncClick = asyncClick
+            }
+        }
     }
 
 }

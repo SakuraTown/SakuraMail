@@ -52,15 +52,11 @@ open class Button(
         itemStack = rawItemStack
     }
 
-    override var serializeId: String = "button"
-
-
     override fun clone(index: Int): Button = Button(rawItemStack, index).also {
         it.baseInventory = baseInventory
         it.onClick = onClick
         it.onClicked = onClicked
         it.asyncClick = asyncClick
-        it.serializeId = serializeId
     }
 
 }

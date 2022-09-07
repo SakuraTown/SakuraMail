@@ -13,7 +13,7 @@ import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.debug.debug
 import top.iseason.bukkit.bukkittemplate.debug.info
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.database.MailRecord
@@ -197,10 +197,10 @@ class MailSenderYml(
 
     fun onSend(receivers: List<UUID>, sender: CommandSender = Bukkit.getConsoleSender()) {
         if (!DatabaseConfig.isConnected) {
-            sender.sendColorMessages("&c邮件 $id 发送失败，数据库未链接!")
+            sender.sendColorMessage("&c邮件 $id 发送失败，数据库未链接!")
         }
         if (mails.isEmpty()) {
-            sender.sendColorMessages("&6没有要发送的邮件!")
+            sender.sendColorMessage("&6没有要发送的邮件!")
             return
         }
         transaction {
@@ -213,9 +213,9 @@ class MailSenderYml(
                         sendTime = LocalDateTime.now()
                     }
                     PlayerMailRecordCaches.getPlayerCache(receiver)?.insertRecord(new)
-                    Bukkit.getPlayer(receiver)?.sendColorMessages(Lang.new_mail)
+                    Bukkit.getPlayer(receiver)?.sendColorMessage(Lang.new_mail)
                 }
-                sender.sendColorMessages("&a已发送&6 ${m.id} ${receivers.size} &a份!")
+                sender.sendColorMessage("&a已发送&6 ${m.id} ${receivers.size} &a份!")
                 debug("&6已发送&6 ${m.id} ${receivers.size} &a份!")
             }
         }

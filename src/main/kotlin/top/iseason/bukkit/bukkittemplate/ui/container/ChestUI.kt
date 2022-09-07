@@ -18,8 +18,8 @@ open class ChestUI(
         resetSlots()
     }
 
-    override fun buildInventory(): Inventory = Bukkit.createInventory(this, super.size, title)
 
+    override fun buildInventory(): Inventory = Bukkit.createInventory(this, super.size, title)
 
     override fun clone(): BaseUI {
         val chestUI = ChestUI(this.title, this.size / 9, this.clickDelay)

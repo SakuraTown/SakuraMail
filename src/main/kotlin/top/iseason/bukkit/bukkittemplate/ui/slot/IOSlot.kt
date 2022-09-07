@@ -2,8 +2,8 @@ package top.iseason.bukkit.bukkittemplate.ui.slot
 
 import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.ItemStack
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.checkAir
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.giveItems
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.EntityUtils.giveItems
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.checkAir
 import top.iseason.bukkit.bukkittemplate.utils.submit
 
 /**
@@ -15,6 +15,7 @@ open class IOSlot(
     //没有物品时的占位符
     placeholder: ItemStack?
 ) : ClickSlot(placeholder, index) {
+
     var placeholder: ItemStack?
         get() = rawItemStack
         set(value) {
@@ -31,7 +32,7 @@ open class IOSlot(
         }
         get() {
             val item = baseInventory?.getItem(index)
-            return if (item != null && !item.type.checkAir() && !item.isSimilar(placeholder)) item
+            return if (item != null && !item.checkAir() && !item.isSimilar(placeholder)) item
             else null
         }
 
@@ -85,8 +86,6 @@ open class IOSlot(
         itemStack = null
     }
 
-    override var serializeId: String = "ioSlot"
-
 
     override fun clone(index: Int): IOSlot = IOSlot(index, placeholder).also {
         it.input = input
@@ -95,7 +94,6 @@ open class IOSlot(
         it.onClicked = onClicked
         it.onInput = onInput
         it.onOutput = onOutput
-        it.serializeId = serializeId
         it.asyncClick = asyncClick
     }
 }

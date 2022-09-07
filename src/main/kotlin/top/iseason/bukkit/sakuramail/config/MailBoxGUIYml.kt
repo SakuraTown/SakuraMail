@@ -12,7 +12,7 @@ import top.iseason.bukkit.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkit.bukkittemplate.config.annotations.FilePath
 import top.iseason.bukkit.bukkittemplate.config.annotations.Key
 import top.iseason.bukkit.bukkittemplate.debug.info
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.applyMeta
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
 import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import top.iseason.bukkit.sakuramail.ui.MailBoxContainer
 import java.util.*

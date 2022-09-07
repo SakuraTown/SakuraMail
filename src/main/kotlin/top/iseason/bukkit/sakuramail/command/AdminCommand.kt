@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import top.iseason.bukkit.bukkittemplate.command.*
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 import top.iseason.bukkit.sakuramail.database.MailRecord
@@ -31,10 +31,10 @@ object AdminRemoveCommand : CommandNode(
         Param("<type>", suggest = listOf("all", "accepted", "expired")),
     )
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val player = getParam<Player>(0).uniqueId
         val type = getParam<String>(1)
@@ -52,8 +52,7 @@ object AdminRemoveCommand : CommandNode(
                 }
             }
         }
-        it.sendColorMessages("&a删除成功!")
-        true
+        it.sendColorMessage("&a删除成功!")
     }
 }
 
@@ -66,10 +65,10 @@ object AdminRemoveAllCommand : CommandNode(
         Param("<type>", suggest = listOf("all", "accepted", "expired")),
     )
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val type = getParam<String>(0).lowercase()
         transaction {
@@ -85,8 +84,7 @@ object AdminRemoveAllCommand : CommandNode(
                 }
             }
         }
-        it.sendColorMessages("&a删除成功!")
-        true
+        it.sendColorMessage("&a删除成功!")
     }
 }
 
@@ -100,15 +98,14 @@ object AdminOpenCommand : CommandNode(
         Param("<player>", suggestRuntime = ParamSuggestCache.playerParam),
     )
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val player = getParam<Player>(0)
         val playerUI = MailBoxGUIYml.getPlayerUI(player)
         playerUI.update()
         playerUI.openFor(it as Player)
-        true
     }
 }

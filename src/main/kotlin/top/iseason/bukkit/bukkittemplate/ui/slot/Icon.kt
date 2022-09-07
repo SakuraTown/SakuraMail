@@ -4,7 +4,7 @@ import org.bukkit.Material
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
-import top.iseason.bukkit.bukkittemplate.utils.bukkit.checkAir
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.checkAir
 
 open class Icon(
     var rawItemStack: ItemStack,
@@ -22,7 +22,7 @@ open class Icon(
         }
         get() {
             val item = baseInventory?.getItem(index)
-            return if (item == null || item.type.checkAir()) rawItemStack
+            return if (item.checkAir()) rawItemStack
             else item
         }
 
@@ -65,11 +65,7 @@ open class Icon(
         itemStack = rawItemStack
     }
 
-    override var serializeId: String = "icon"
-
-
     override fun clone(index: Int): Icon = Icon(rawItemStack, index).also {
         it.baseInventory = baseInventory
-        it.serializeId = serializeId
     }
 }

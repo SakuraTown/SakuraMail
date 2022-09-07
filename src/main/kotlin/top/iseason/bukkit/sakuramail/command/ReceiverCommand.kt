@@ -10,7 +10,7 @@ import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.Params
 import top.iseason.bukkit.bukkittemplate.command.ParmaException
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
-import top.iseason.bukkit.bukkittemplate.utils.sendColorMessages
+import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.MailReceiversYml
@@ -66,7 +66,7 @@ object ReceiverAddCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(CommandSender) -> Unit)? = {
         val id = getParam<String>(0)
         val copyOfRange = params.copyOfRange(1, params.size)
         copyOfRange.forEachIndexed { index, s ->
@@ -76,9 +76,8 @@ object ReceiverAddCommand : CommandNode(
         orDefault.addAll(copyOfRange)
         MailReceiversYml.timeReceivers[id] = orDefault
         MailReceiversYml.save()
-        it.sendColorMessages("$id 的参数为")
-        it.sendColorMessages(orDefault)
-        true
+        it.sendColorMessage("$id 的参数为")
+        it.sendColorMessage(orDefault)
     }
 }
 
@@ -93,15 +92,14 @@ object ReceiverSetCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = {
+    override var onExecute: (Params.(CommandSender) -> Unit)? = {
         val id = getParam<String>(0)
         val strings = MailReceiversYml.timeReceivers[id] ?: throw ParmaException("&cid不存在!")
         val index = getParam<Int>(1)
         strings[index] = getParam<String>(2).removePrefix("--").replace('_', ' ')
         MailReceiversYml.save()
-        it.sendColorMessages("$id 的参数为")
-        it.sendColorMessages(strings)
-        true
+        it.sendColorMessage("$id 的参数为")
+        it.sendColorMessage(strings)
     }
 }
 
@@ -114,10 +112,10 @@ object ReceiverRemoveCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val id = getParam<String>(0)
         val remove = MailReceiversYml.timeReceivers.remove(id)
@@ -126,8 +124,7 @@ object ReceiverRemoveCommand : CommandNode(
             MailReceivers.deleteWhere { MailReceivers.id eq id }
         }
         if (remove == null && count == 0) throw ParmaException("&cid不存在!")
-        it.sendColorMessages("&a删除成功")
-        true
+        it.sendColorMessage("&a删除成功")
     }
 }
 
@@ -140,15 +137,15 @@ object ReceiverTestCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val id = getParam<String>(0)
         val receivers = MailReceiversYml.getReceivers(id) ?: throw ParmaException("&cid不存在!")
-        if (receivers.isEmpty()) it.sendColorMessages("&6没有符合条件的接收者!")
-        else it.sendColorMessages(
+        if (receivers.isEmpty()) it.sendColorMessage("&6没有符合条件的接收者!")
+        else it.sendColorMessage(
             "&a找到 ${receivers.size} 个接收者,前5个为: &6${
                 receivers.joinToString(
                     ", ",
@@ -159,7 +156,6 @@ object ReceiverTestCommand : CommandNode(
                 }
             }"
         )
-        true
     }
 }
 
@@ -173,16 +169,16 @@ object ReceiverExportCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{ it ->
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{ it ->
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         val id = getParam<String>(0)
         val receivers: List<UUID> =
             MailReceiversYml.getReceivers(id) ?: throw ParmaException("&cid不存在!")
-        if (receivers.isEmpty()) it.sendColorMessages("&6没有符合条件的接收者!")
-        else it.sendColorMessages("&a找到 ${receivers.size} 个接收者")
+        if (receivers.isEmpty()) it.sendColorMessage("&6没有符合条件的接收者!")
+        else it.sendColorMessage("&a找到 ${receivers.size} 个接收者")
         val type = getOptionalParam<String>(1) ?: "name"
         val results: List<String> = if (type == "name")
             receivers.mapNotNull { (Bukkit.getPlayer(it) ?: Bukkit.getOfflinePlayer(it)).name }
@@ -198,8 +194,7 @@ object ReceiverExportCommand : CommandNode(
                 bw.newLine()
             }
         }
-        it.sendColorMessages("&a文件已输出: $file")
-        true
+        it.sendColorMessage("&a文件已输出: $file")
     }
 }
 
@@ -212,10 +207,10 @@ object ReceiverUploadCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         kotlin.runCatching {
             MailReceiversYml.upload()
@@ -223,8 +218,7 @@ object ReceiverUploadCommand : CommandNode(
             e.printStackTrace()
             throw ParmaException("&cMailReceiver数据上传异常!")
         }
-        it.sendColorMessages("&aMailReceiver数据上传成功!")
-        true
+        it.sendColorMessage("&aMailReceiver数据上传成功!")
     }
 }
 
@@ -237,10 +231,10 @@ object ReceiverDownloadCommand : CommandNode(
     ),
     async = true
 ) {
-    override var onExecute: (Params.(sender: CommandSender) -> Boolean)? = onExecute@{
+    override var onExecute: (Params.(CommandSender) -> Unit)? = onExecute@{
         if (!DatabaseConfig.isConnected) {
-            it.sendColorMessages(Lang.database_error)
-            return@onExecute true
+            it.sendColorMessage(Lang.database_error)
+            return@onExecute
         }
         kotlin.runCatching {
             MailReceiversYml.download()
@@ -248,7 +242,6 @@ object ReceiverDownloadCommand : CommandNode(
             e.printStackTrace()
             throw ParmaException("&cMailReceiver数据下载异常!")
         }
-        it.sendColorMessages("&aMailReceiver数据下载成功!")
-        true
+        it.sendColorMessage("&aMailReceiver数据下载成功!")
     }
 }
