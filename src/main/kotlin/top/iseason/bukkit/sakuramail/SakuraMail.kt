@@ -1,22 +1,26 @@
 package top.iseason.bukkit.sakuramail
 
+import fr.xephi.authme.events.LoginEvent
 import org.bukkit.Bukkit
+import org.bukkit.event.player.PlayerLoginEvent
 import org.bukkit.inventory.ItemStack
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import top.iseason.bukkit.bukkittemplate.KotlinPlugin
-import top.iseason.bukkit.bukkittemplate.command.CommandBuilder
+import top.iseason.bukkit.bukkittemplate.command.CommandHandler
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkit.bukkittemplate.config.dbTransaction
 import top.iseason.bukkit.bukkittemplate.debug.info
 import top.iseason.bukkit.bukkittemplate.ui.UIListener
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessage
+import top.iseason.bukkit.bukkittemplate.utils.bukkit.EventUtils.listen
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.EventUtils.register
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArray
 import top.iseason.bukkit.bukkittemplate.utils.bukkit.ItemUtils.toByteArrays
-import top.iseason.bukkit.sakuramail.command.command
+import top.iseason.bukkit.sakuramail.command.mainCommand
 import top.iseason.bukkit.sakuramail.config.*
 import top.iseason.bukkit.sakuramail.database.*
+import top.iseason.bukkit.sakuramail.hook.AuthMeHook
 import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
 import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkit.sakuramail.listener.PlayerListener
@@ -47,13 +51,22 @@ object SakuraMail : KotlinPlugin() {
         MailContentYml.load(false)
         MailBoxGUIYml.load(false)
         PlayerListener.register()
+        if (AuthMeHook.hasHook) {
+            listen<LoginEvent> {
+                PlayerListener.onLogin(player)
+            }
+        } else {
+            listen<PlayerLoginEvent> {
+                PlayerListener.onLogin(player)
+            }
+        }
         UIListener.register()
-        command()
-        CommandBuilder.updateCommands()
+        mainCommand()
+        CommandHandler.updateCommands()
         runCatching {
-            Bukkit.getOnlinePlayers().forEach { PlayerListener.onLogin(it) }
+            Bukkit.getOnlinePlayers().forEach { PlayerListener.updateLoginTime(it) }
         }.getOrElse { it.printStackTrace() }
-        info("&a插件初始化完成!")
+        info("&a插件初始化完成! ")
 
     }
 
@@ -62,12 +75,12 @@ object SakuraMail : KotlinPlugin() {
         MailSendersYml.scheduler.shutdown()
         runCatching {
             Bukkit.getOnlinePlayers().forEach {
-                PlayerListener.onQuit(it)
+                PlayerListener.updateQuitTime(it)
                 PlayerMailRecordCaches.remove(it)
                 MailBoxGUIYml.guiCaches.remove(it.uniqueId)
             }
         }.getOrElse { it.printStackTrace() }
-        info("&6插件已卸载! ")
+        info("&6插件已卸载!")
     }
 
     fun loadOrCopyQuartzProperties(): Properties {

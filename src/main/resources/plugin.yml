@@ -5,6 +5,7 @@ authors: [ ${ author } ]
 softdepend:
   - PlaceholderAPI
   - ItemsAdder
+  - AuthMe
 api-version: 1.13
 runtime-libraries:
   # If not defined, it will be 'libraries'

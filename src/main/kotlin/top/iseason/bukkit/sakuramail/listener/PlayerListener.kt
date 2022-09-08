@@ -3,7 +3,6 @@ package top.iseason.bukkit.sakuramail.listener
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerLoginEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
@@ -24,10 +23,35 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 object PlayerListener : Listener {
+
+    /**
+     * 玩家登录时调用，处理邮件接受者类型 login
+     */
+    fun onLogin(player: Player) {
+        if (!DatabaseConfig.isConnected) return
+        submit(async = true) {
+            // login 类型发生在更新玩家登陆时间之前
+            MailSendersYml.senders.values.forEach {
+                if (it.type != "login") return@forEach
+                it.onSend(it.getAllReceivers(it.receivers, player))
+            }
+            // 更新玩家登陆时间
+            updateLoginTime(player)
+            if (Lang.login_tip.trim().isEmpty()) return@submit
+            dbTransaction {
+                val count = MailRecords.slice(MailRecords.id)
+                    .select { MailRecords.player eq player.uniqueId and (MailRecords.acceptTime eq null) }
+                    .count()
+                if (count == 0L) return@dbTransaction
+                player.sendColorMessage(Lang.login_tip.formatBy(count))
+            }
+        }
+    }
+
     /**
      * 更新玩家登录时间
      */
-    fun onLogin(player: Player) {
+    fun updateLoginTime(player: Player) {
         if (!DatabaseConfig.isConnected) return
         dbTransaction {
             PlayerTime.new {
@@ -40,7 +64,7 @@ object PlayerListener : Listener {
     /**
      * 更新玩家退出时间
      */
-    fun onQuit(player: Player) {
+    fun updateQuitTime(player: Player) {
         if (!DatabaseConfig.isConnected) return
         dbTransaction {
             val login = PlayerTime.find { PlayerTimes.player eq player.uniqueId }
@@ -53,30 +77,10 @@ object PlayerListener : Listener {
     }
 
     @EventHandler
-    fun onPlayerLoginEvent(event: PlayerLoginEvent) {
-        if (!DatabaseConfig.isConnected) return
-        submit(async = true) {
-            MailSendersYml.senders.values.forEach {
-                if (it.type != "login") return@forEach
-                it.onSend(it.getAllReceivers(it.receivers, event.player))
-            }
-            onLogin(event.player)
-            if (Lang.login_tip.trim().isEmpty()) return@submit
-            dbTransaction {
-                val count = MailRecords.slice(MailRecords.id)
-                    .select { MailRecords.player eq event.player.uniqueId and (MailRecords.acceptTime eq null) }
-                    .count()
-                if (count == 0L) return@dbTransaction
-                event.player.sendColorMessage(Lang.login_tip.formatBy(count))
-            }
-        }
-    }
-
-    @EventHandler
     fun onPlayerQuitEvent(event: PlayerQuitEvent) {
         if (!DatabaseConfig.isConnected) return
         submit(async = true) {
-            onQuit(event.player)
+            updateQuitTime(event.player)
             PlayerMailRecordCaches.remove(event.player)
             MailBoxGUIYml.guiCaches.remove(event.player.uniqueId)
         }

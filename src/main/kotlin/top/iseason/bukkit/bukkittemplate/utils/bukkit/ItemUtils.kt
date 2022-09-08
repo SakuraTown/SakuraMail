@@ -111,7 +111,7 @@ object ItemUtils {
     /**
      * 检查物品是否是空气.null也为空气
      */
-    fun ItemStack?.checkAir(): Boolean = if (this == null) false else type.checkAir()
+    fun ItemStack?.checkAir(): Boolean = if (this == null) true else type.checkAir()
 
     /**
      * 物品转化为字节
@@ -751,5 +751,6 @@ object ItemUtils {
      * @return 溢出的物品数量
      */
     fun Inventory.canAddItem(itemStacks: Collection<ItemStack>): Int = canAddItem(*itemStacks.toTypedArray())
+
 
 }

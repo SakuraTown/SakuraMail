@@ -54,7 +54,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
     var isConnected = false
         private set
     private var isConnecting = false
-    lateinit var connection: Database
+    public lateinit var connection: Database
         private set
     private var ds: HikariDataSource? = null
 
@@ -171,7 +171,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
         if (!isConnected) return
         this.tables = tables
         runCatching {
-            dbTransaction {
+            transaction {
                 SchemaUtils.create(*tables)
             }
         }.getOrElse { it.printStackTrace() }

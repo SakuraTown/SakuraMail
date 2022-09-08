@@ -4,31 +4,28 @@ import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionDefault
 import top.iseason.bukkit.bukkittemplate.command.Param
 import top.iseason.bukkit.bukkittemplate.command.ParamSuggestCache
-import top.iseason.bukkit.bukkittemplate.command.commandRoot
+import top.iseason.bukkit.bukkittemplate.command.command
+import top.iseason.bukkit.bukkittemplate.command.node
 import top.iseason.bukkit.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkit.bukkittemplate.debug.SimpleLogger
 import top.iseason.bukkit.bukkittemplate.utils.MessageUtils.sendColorMessages
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailBoxGUIYml
 
-fun command() {
-    commandRoot(
-        "sakuramail",
-        alias = arrayOf("smail", "mail"),
-        default = PermissionDefault.TRUE,
-        async = true,
+fun mainCommand() {
+    command("sakuramail") {
+        alias = arrayOf("smail", "mail")
+        default = PermissionDefault.TRUE
+        async = true
         description = "系统邮件根节点"
-    ) {
-        node(SystemMailCommand)
-        SystemMailCommand.apply {
+        node(SystemMailCommand).apply {
             addSubNode(SystemMailCreateCommand)
             addSubNode(SystemMailEditCommand)
             addSubNode(SystemMailUploadCommand)
             addSubNode(SystemMailDownloadCommand)
             addSubNode(SystemMailURemoveCommand)
         }
-        node(ReceiverCommand)
-        ReceiverCommand.apply {
+        node(ReceiverCommand).apply {
             addSubNode(ReceiverSetCommand)
             addSubNode(ReceiverAddCommand)
             addSubNode(ReceiverRemoveCommand)
@@ -37,28 +34,24 @@ fun command() {
             addSubNode(ReceiverDownloadCommand)
             addSubNode(ReceiverExportCommand)
         }
-        node(SenderCommand)
-        SenderCommand.apply {
+        node(SenderCommand).apply {
             addSubNode(SenderCreateCommand)
             addSubNode(SenderRemoveCommand)
             addSubNode(SenderSendCommand)
             addSubNode(SenderUploadCommand)
             addSubNode(SenderDownloadCommand)
         }
-        node(AdminCommand)
-        AdminCommand.apply {
+        node(AdminCommand).apply {
             addSubNode(AdminRemoveCommand)
             addSubNode(AdminRemoveAllCommand)
             addSubNode(AdminOpenCommand)
         }
-        node(
-            "upload",
-            description = "上传数据到数据库",
-            default = PermissionDefault.OP,
-            async = true,
+        node("upload") {
+            description = "上传数据到数据库"
+            default = PermissionDefault.OP
+            async = true
             params = arrayOf(Param("<type>", listOf("all", "sender", "systemMail", "receiver")))
-        ) {
-            onExecute {
+            onExecute = onExecute@{
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
                     return@onExecute
@@ -76,13 +69,13 @@ fun command() {
             }
         }
         node(
-            "download",
-            default = PermissionDefault.OP,
-            description = "从数据库下载数据",
-            async = true,
-            params = arrayOf(Param("<type>", listOf("all", "sender", "systemMail", "receiver")))
+            "download"
         ) {
-            onExecute {
+            default = PermissionDefault.OP
+            description = "从数据库下载数据"
+            async = true
+            params = arrayOf(Param("<type>", listOf("all", "sender", "systemMail", "receiver")))
+            onExecute = onExecute@{
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
                     return@onExecute
@@ -99,13 +92,11 @@ fun command() {
                 }
             }
         }
-        node(
-            "open",
-            description = "打开邮箱",
-            async = true,
+        node("open") {
+            description = "打开邮箱"
+            async = true
             isPlayerOnly = true
-        ) {
-            onExecute {
+            onExecute = onExecute@{
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
                     return@onExecute
@@ -117,13 +108,13 @@ fun command() {
             }
         }
         node(
-            "openFor",
-            description = "为玩家打开邮箱",
-            async = true,
-            default = PermissionDefault.OP,
-            params = arrayOf(Param("<player>", suggestRuntime = ParamSuggestCache.playerParam))
+            "openFor"
         ) {
-            onExecute {
+            description = "为玩家打开邮箱"
+            async = true
+            default = PermissionDefault.OP
+            params = arrayOf(Param("<player>", suggestRuntime = ParamSuggestCache.playerParam))
+            onExecute = onExecute@{
                 if (!DatabaseConfig.isConnected) {
                     it.sendColorMessages(Lang.database_error)
                     return@onExecute
@@ -134,24 +125,20 @@ fun command() {
                 playerUI.openFor(player)
             }
         }
-        node(
-            "debug",
-            description = "切换调试模式",
-            async = true,
+        node("debug") {
+            description = "切换调试模式"
+            async = true
             default = PermissionDefault.OP
-        ) {
-            onExecute {
+            onExecute = {
                 SimpleLogger.isDebug = !SimpleLogger.isDebug
                 it.sendColorMessages("&a调试模式: &6${SimpleLogger.isDebug}")
             }
         }
-        node(
-            "reConnect",
-            description = "重新链接数据库",
-            async = true,
+        node("reConnect") {
+            description = "重新链接数据库"
+            async = true
             default = PermissionDefault.OP
-        ) {
-            onExecute {
+            onExecute = {
                 DatabaseConfig.reConnected()
                 it.sendColorMessages("&a操作完成!")
             }

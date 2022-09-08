@@ -33,6 +33,7 @@ val shadowJar: ShadowJar by tasks
 
 val exposedVersion: String by project
 val obfuscated: String by project
+val isObfuscated = obfuscated == "true"
 val shrink: String by project
 
 repositories {
@@ -82,6 +83,7 @@ dependencies {
     compileOnly("org.quartz-scheduler:quartz:2.3.2")
     compileOnly("me.clip:placeholderapi:2.11.2")
     compileOnly("com.github.LoneDev6:api-itemsadder:3.0.0")
+    compileOnly("fr.xephi:authme:5.6.0-SNAPSHOT")
 
     compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
 
@@ -89,8 +91,11 @@ dependencies {
 
 tasks {
     shadowJar {
+        if (isObfuscated) {
+            relocate("top.iseason.bukkit.bukkittemplate.BukkitTemplate", "a")
+        }
         relocate("top.iseason.bukkit.bukkittemplate", "$groupS.libs.core")
-        relocate("org.bstats.bstats-bukkit", "$groupS.libs.bstats")
+        relocate("org.bstats", "$groupS.libs.bstats")
         relocate("io.github.bananapuncher714.nbteditor", "$groupS.libs.nbteditor")
     }
     build {
@@ -105,7 +110,7 @@ tasks {
     processResources {
         filesMatching("plugin.yml") {
             expand(
-                "main" to "$groupS.libs.core.BukkitTemplate",
+                "main" to if (isObfuscated) "a" else "$groupS.libs.core.BukkitTemplate",
                 "name" to pluginName,
                 "version" to project.version,
                 "author" to author,
@@ -126,7 +131,7 @@ tasks.register<proguard.gradle.ProGuardTask>("buildPlugin") {
     group = "minecraft"
     verbose()
     injars(tasks.named("shadowJar"))
-    if (obfuscated != "true") {
+    if (!isObfuscated) {
         dontobfuscate()
     }
     if (shrink != "true") {
@@ -151,22 +156,23 @@ tasks.register<proguard.gradle.ProGuardTask>("buildPlugin") {
     //启用混淆的选项
     val allowObf = mapOf("allowobfuscation" to true)
     //class规则
-    keep("class $groupS.libs.core.BukkitTemplate {*;}")
-//    keepclassmembers(allowObf,"class $groupS.libs.core.utils.NBTEditor {*;}")
-    keep(allowObf, "class $groupS.libs.core.utils.MessageUtilsKt {*;}")
-    keep("class * implements $groupS.libs.core.KotlinPlugin {*;}")
+    if (isObfuscated) keep(allowObf, "class a {}")
+    else keep("class $groupS.libs.core.BukkitTemplate {}")
+//    keep(allowObf, "class $groupS.libs.core.utils.MessageUtilsKt {*;}")
+    keep(allowObf, "class * implements $groupS.libs.core.KotlinPlugin {*;}")
     keepclassmembers("class * extends $groupS.libs.core.config.SimpleYAMLConfig {*;}")
-//    keepclassmembers(allowObf, "class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
+    keepclassmembers("class * implements $groupS.libs.core.ui.container.BaseUI {*;}")
     keepclassmembers(allowObf, "class * implements org.bukkit.event.Listener {*;}")
-    keepclassmembers("class * extends org.jetbrains.exposed.dao.Entity {*;}")
-//    keepclassmembers(
-//        allowObf,
-//        "class * implements org.bukkit.configuration.serialization.ConfigurationSerializable {*;}"
-//    )
+    keepclassmembers(allowObf, "class * implements org.jetbrains.exposed.dao.id.IdTable {*;}")
+    keepclassmembers(allowObf, "class * extends org.jetbrains.exposed.dao.Entity {*;}")
+    keepclassmembers(
+        allowObf,
+        "class * implements org.bukkit.configuration.serialization.ConfigurationSerializable {*;}"
+    )
     keepattributes("Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod")
     keepkotlinmetadata()
     repackageclasses()
-    if (obfuscated == "true")
+    if (isObfuscated)
         outjars(File(jarOutputFile, "${project.name}-${project.version}-obfuscated.jar"))
     else
         outjars(File(jarOutputFile, "${project.name}-${project.version}.jar"))

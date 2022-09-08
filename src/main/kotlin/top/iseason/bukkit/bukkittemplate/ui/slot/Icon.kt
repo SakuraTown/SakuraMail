@@ -22,7 +22,7 @@ open class Icon(
         }
         get() {
             val item = baseInventory?.getItem(index)
-            return if (item == null || item.checkAir()) rawItemStack
+            return if (item.checkAir()) rawItemStack
             else item
         }
 
