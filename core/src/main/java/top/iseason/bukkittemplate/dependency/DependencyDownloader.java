@@ -19,9 +19,9 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 public class DependencyDownloader {
 
     public static File parent = new File(".", "libraries");
-    public static Set<String> exists = new HashSet<>();
     public List<String> repositories = new ArrayList<>();
     public List<String> dependencies = new ArrayList<>();
+    public static Set<String> exists = new HashSet<>();
 
     /**
      * 下载依赖

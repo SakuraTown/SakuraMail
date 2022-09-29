@@ -15,6 +15,7 @@ object MailSenders : StringIdTable() {
     val param = text("param")
     val receivers = text("receivers")
     val mails = text("mails")
+
 }
 
 /**

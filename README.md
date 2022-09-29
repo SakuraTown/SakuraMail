@@ -293,7 +293,7 @@ export <id> <type>        导出符合邮件接收者的玩家
 
 1. 使用命令 ` sakuramail sender create <id> <type> [param]`
 
-   其中 <id> 为唯一id <type> 为发送者的类型，目前有 `onTime` `period` `login` `manual` 4种 [parma] 为对应类型的参数
+   其中 <id> 为唯一id <type> 为发送者的类型，目前有 `onTime` `period` `login` `manual` `register` 5种 [parma] 为对应类型的参数
 
 2. 通过配置修改 `senders.yml`
 
@@ -324,10 +324,15 @@ export <id> <type>        导出符合邮件接收者的玩家
    登录: # 邮件发送者ID
      type: login # 该类型在玩家登录时触发
      receivers:
-       - online
+       - player
      mails:
        - test
-     
+   注册: # 邮件发送者ID，仅支持Authme时有效
+     type: register # 该类型在玩家注册时触发
+     receivers:
+       - player
+     mails:
+       - test
    ~~~
 
    特别的: login 类型的发送者中的接收者的参数中如果有 `%uuid%` 将被替换为哦该登录玩家的uuid

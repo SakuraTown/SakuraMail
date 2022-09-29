@@ -1,6 +1,7 @@
 package top.iseason.bukkit.sakuramail
 
 import fr.xephi.authme.events.LoginEvent
+import fr.xephi.authme.events.RegisterEvent
 import org.bukkit.Bukkit
 import org.bukkit.event.player.PlayerLoginEvent
 import org.bukkit.inventory.ItemStack
@@ -54,6 +55,11 @@ object SakuraMail : KotlinPlugin() {
         if (AuthMeHook.hasHooked) {
             listen<LoginEvent> {
                 PlayerListener.onLogin(player)
+            }
+            listen<RegisterEvent> {
+                MailSendersYml.senders.values.filter { it.type == "register" }.forEach {
+                    it.onSend(it.getAllReceivers(it.receivers, player))
+                }
             }
         } else {
             listen<PlayerLoginEvent> {

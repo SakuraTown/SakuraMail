@@ -9,7 +9,6 @@ val exposedVersion: String by rootProject
 
 dependencies {
 
-
     implementation("io.github.bananapuncher714:nbteditor:7.18.3")
     compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
 

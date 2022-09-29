@@ -27,7 +27,7 @@ object MailRecords : IntIdTable() {
     /**
      * 玩家uid
      */
-    val player = uuid("player")
+    val player = uuid("player").index()
 
     /**
      * 关联的邮件
@@ -44,6 +44,9 @@ object MailRecords : IntIdTable() {
      */
     val acceptTime = datetime("acceptTime").nullable()
 
+    init {
+        uniqueIndex(mail, sendTime)
+    }
 }
 
 class MailRecord(id: EntityID<Int>) : IntEntity(id) {

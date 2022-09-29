@@ -15,6 +15,7 @@ import top.iseason.bukkit.sakuramail.config.SystemMailsYml.isEncrypted
 import top.iseason.bukkit.sakuramail.database.SystemMail
 import top.iseason.bukkit.sakuramail.database.SystemMails
 import top.iseason.bukkit.sakuramail.hook.ItemsAdderHook
+import top.iseason.bukkit.sakuramail.hook.PlaceHolderHook
 import top.iseason.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkittemplate.config.annotations.Comment
 import top.iseason.bukkittemplate.config.annotations.FilePath
@@ -138,6 +139,7 @@ data class SystemMailYml(
 
     private fun parseCommand(command: String, player: Player) {
         var playerCommand = command.replace("%player%", player.name)
+        playerCommand = PlaceHolderHook.setPlaceHolder(playerCommand, player)
         if (playerCommand.startsWith("CMD:", true)) {
             playerCommand = playerCommand.removeRange(0, 3)
             try {

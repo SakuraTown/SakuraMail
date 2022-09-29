@@ -31,8 +31,7 @@ object PlayerListener : Listener {
         if (!DatabaseConfig.isConnected) return
         submit(async = true) {
             // login 类型发生在更新玩家登陆时间之前
-            MailSendersYml.senders.values.forEach {
-                if (it.type != "login") return@forEach
+            MailSendersYml.senders.values.filter { it.type == "login" }.forEach {
                 it.onSend(it.getAllReceivers(it.receivers, player))
             }
             // 更新玩家登陆时间
@@ -47,6 +46,7 @@ object PlayerListener : Listener {
             }
         }
     }
+
 
     /**
      * 更新玩家登录时间

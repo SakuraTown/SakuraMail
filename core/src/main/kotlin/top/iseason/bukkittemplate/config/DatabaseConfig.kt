@@ -182,7 +182,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
  * varchar(255) 作为主键的table
  */
 open class StringIdTable(name: String = "", columnName: String = "id") : IdTable<String>(name) {
-    final override val id: Column<EntityID<String>> = varchar(columnName, 255).entityId()
+    final override val id: Column<EntityID<String>> = varchar(columnName, 255).entityId().uniqueIndex()
     final override val primaryKey = PrimaryKey(id)
 }
 

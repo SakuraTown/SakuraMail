@@ -123,7 +123,7 @@ object MailSendersYml : SimpleYAMLConfig() {
      */
     private fun fromConfig(id: String, section: ConfigurationSection): MailSenderYml? {
         var type = section.getString("type")?.lowercase() ?: return null
-        if (type !in setOf("login", "ontime", "period")) type = "manual"
+        if (type !in setOf("login", "ontime", "period", "register")) type = "manual"
         var param = section["param"] ?: ""
         param = if (param is Date)
             LocalDateTime.ofInstant(param.toInstant(), ZoneId.of("Z")).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)

@@ -43,6 +43,12 @@ object PlayerTimes : IntIdTable() {
      */
     val playTime = duration("play_time").nullable()
 
+    init {
+        uniqueIndex(player, loginTime)
+        uniqueIndex(player, quitTime)
+        uniqueIndex(player, loginTime, quitTime)
+    }
+
     /**
      * 获取总共游玩的时间
      */
