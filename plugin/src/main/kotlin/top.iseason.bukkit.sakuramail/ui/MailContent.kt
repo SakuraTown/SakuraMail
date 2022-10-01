@@ -64,6 +64,7 @@ class MailContent(
     }
 
     init {
+        lockOnTop = true
         setUpSlots(back, MailContentYml.backs)
         setUpSlots(delete, MailContentYml.delete)
         if (mail.canGetKit())

@@ -27,6 +27,7 @@ class MailBoxPage(
     ), row = MailBoxGUIYml.row,
     clickDelay = MailBoxGUIYml.clickDelay
 ) {
+
     private var mails = mailCache.getPageCache(page)
     private var mailIndex = mutableMapOf<Int, Int>()
 
@@ -82,6 +83,7 @@ class MailBoxPage(
     }
 
     init {
+        lockOnTop = true
         setUpSlots(icon, MailBoxGUIYml.icons)
         setUpSlots(nextPage, MailBoxGUIYml.nextPage)
         setUpSlots(lastPage, MailBoxGUIYml.lastPage)
