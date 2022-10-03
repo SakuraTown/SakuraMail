@@ -8,7 +8,6 @@ import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -182,7 +181,7 @@ object DatabaseConfig : SimpleYAMLConfig() {
  * varchar(255) 作为主键的table
  */
 open class StringIdTable(name: String = "", columnName: String = "id") : IdTable<String>(name) {
-    final override val id: Column<EntityID<String>> = varchar(columnName, 255).entityId().uniqueIndex()
+    final override val id: Column<EntityID<String>> = varchar(columnName, 255).entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
