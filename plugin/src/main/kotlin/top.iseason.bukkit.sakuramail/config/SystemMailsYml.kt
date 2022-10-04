@@ -101,8 +101,9 @@ object SystemMailsYml : SimpleYAMLConfig() {
      */
     fun saveToYml() {
         mailSection.getKeys(false).forEach { config.set(it, null) }
-        for (mail in mails) {
-            mailSection[mail.key] = mail.value.toSection()
+        for ((id, mail) in mails) {
+            if (mail.type == "temp") continue
+            mailSection[id] = mail.toSection()
         }
         (config as YamlConfiguration).save(configPath)
     }
@@ -177,7 +178,7 @@ data class SystemMailYml(
         section["id"] = id
         section["icon"] = ItemsAdderHook.getItemsAdderItem(icon)?.id ?: icon.toSection()
         section["title"] = title
-        section["expire"] = expire
+        section["expire"] = expire.toString()
         if (items.isNotEmpty()) {
             if (isEncrypted) {
                 section["items"] = items.toBase64()

@@ -63,7 +63,11 @@ object SystemMailEditCommand : CommandNode(
     name = "edit",
     description = "编辑系统邮件的物品,其他操作请从yml修改",
     default = PermissionDefault.OP,
-    params = listOf(Param("<id>", suggestRuntime = { SystemMailsYml.mails.keys })),
+    params = listOf(
+        Param(
+            "<id>",
+            suggestRuntime = { SystemMailsYml.mails.mapNotNull { if (it.value.type == "system") it.key else null } })
+    ),
     isPlayerOnly = true,
     async = true
 ) {

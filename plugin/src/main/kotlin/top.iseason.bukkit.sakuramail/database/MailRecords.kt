@@ -175,6 +175,7 @@ class MailRecordCache(
         //删除一次性邮件
         if (mailYml.type != "system") {
             SystemMails.deleteWhere { SystemMails.id eq mailYml.id }
+            SystemMailsYml.mails.remove(mailYml.id)
         }
     }
 
