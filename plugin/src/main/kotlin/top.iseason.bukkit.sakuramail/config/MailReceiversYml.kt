@@ -22,6 +22,10 @@ import java.util.*
 @FilePath("receivers.yml")
 object MailReceiversYml : SimpleYAMLConfig() {
 
+    @Comment("是否启用，启用将会收集玩家登录信息,需要重启")
+    @Key
+    var enableed = true
+
     @Comment("邮件目标选择器")
     @Key("receivers")
     var timeReceivers = mutableMapOf<String, MutableList<String>>()

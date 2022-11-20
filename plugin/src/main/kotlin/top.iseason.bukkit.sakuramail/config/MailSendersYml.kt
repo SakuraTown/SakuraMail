@@ -41,8 +41,8 @@ object MailSendersYml : SimpleYAMLConfig() {
     override fun onLoaded(section: ConfigurationSection) {
         senders.clear()
         config.getKeys(false).forEach { id ->
-            val section = config.getConfigurationSection(id) ?: return@forEach
-            val fromConfig = fromConfig(id, section) ?: return@forEach
+            val s = config.getConfigurationSection(id) ?: return@forEach
+            val fromConfig = fromConfig(id, s) ?: return@forEach
             senders[id] = fromConfig
         }
         updateSender()

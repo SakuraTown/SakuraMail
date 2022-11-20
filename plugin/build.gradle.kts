@@ -22,6 +22,7 @@ dependencies {
     // 本地依赖放在libs文件夹内
     compileOnly(fileTree("libs") { include("*.jar") })
     implementation("org.bstats:bstats-bukkit:3.0.0")
+    implementation("io.github.bananapuncher714:nbteditor:7.18.3")
     compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
     compileOnly("org.quartz-scheduler:quartz:2.3.2")
     compileOnly("me.clip:placeholderapi:2.11.2")

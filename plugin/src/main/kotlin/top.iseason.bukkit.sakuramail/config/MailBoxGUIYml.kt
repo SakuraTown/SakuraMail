@@ -41,7 +41,7 @@ object MailBoxGUIYml : SimpleYAMLConfig() {
         set("1.slots", "47,48,50,51")
         set(
             "1.item",
-            ItemStack(Material.GRAY_STAINED_GLASS_PANE).applyMeta { setDisplayName("") }.toSection()
+            ItemStack(Material.GLASS).applyMeta { setDisplayName("") }.toSection()
         )
         set("2.slots", "49")
         set(

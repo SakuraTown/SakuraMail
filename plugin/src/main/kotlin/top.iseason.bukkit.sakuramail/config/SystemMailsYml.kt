@@ -1,16 +1,14 @@
 package top.iseason.bukkit.sakuramail.config
 
+import io.github.bananapuncher714.nbteditor.NBTEditor
 import org.bukkit.Bukkit
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.MemorySection
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.bukkit.persistence.PersistentDataType
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import top.iseason.bukkit.sakuramail.SakuraMail
 import top.iseason.bukkit.sakuramail.config.SystemMailsYml.isEncrypted
 import top.iseason.bukkit.sakuramail.database.SystemMail
 import top.iseason.bukkit.sakuramail.database.SystemMails
@@ -23,7 +21,6 @@ import top.iseason.bukkittemplate.config.annotations.Key
 import top.iseason.bukkittemplate.config.dbTransaction
 import top.iseason.bukkittemplate.utils.bukkit.EntityUtils.giveItems
 import top.iseason.bukkittemplate.utils.bukkit.ItemUtils
-import top.iseason.bukkittemplate.utils.bukkit.ItemUtils.applyMeta
 import top.iseason.bukkittemplate.utils.bukkit.ItemUtils.canAddItem
 import top.iseason.bukkittemplate.utils.bukkit.ItemUtils.toBase64
 import top.iseason.bukkittemplate.utils.bukkit.ItemUtils.toByteArray
@@ -54,8 +51,8 @@ object SystemMailsYml : SimpleYAMLConfig() {
     override fun onLoaded(section: ConfigurationSection) {
         mails.clear()
         for (key in mailSection.getKeys(false)) {
-            val section = mailSection.getConfigurationSection(key) ?: continue
-            mails[key] = SystemMailYml.of(section) ?: continue
+            val s = mailSection.getConfigurationSection(key) ?: continue
+            mails[key] = SystemMailYml.of(s) ?: continue
         }
     }
 
@@ -265,12 +262,11 @@ data class SystemMailYml(
         /**
          * 检测此Item是否是虚拟物品，将不会给予玩家
          */
-        fun ItemStack.isFakeItem() = itemMeta?.persistentDataContainer?.has(FAKE_ITEM, PersistentDataType.BYTE) == true
+        fun ItemStack.isFakeItem() = NBTEditor.contains(this, "PublicBukkitValues", "sakura_mail_fake_item")
 
-        fun ItemStack.setFakeItem() = applyMeta {
-            persistentDataContainer.set(FAKE_ITEM, PersistentDataType.BYTE, 1)
+        fun ItemStack.setFakeItem() {
+            val set = NBTEditor.set(this, 1.toByte(), "PublicBukkitValues", "sakura_mail_fake_item")
+            this.itemMeta = set.itemMeta
         }
-
-        private val FAKE_ITEM = NamespacedKey(SakuraMail.javaPlugin, "sakura_mail_fake_item")
     }
 }

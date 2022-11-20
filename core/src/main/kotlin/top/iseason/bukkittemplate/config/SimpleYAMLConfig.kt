@@ -269,28 +269,26 @@ open class SimpleYAMLConfig(
         val commentedFile = File(file.path + ".tmp")
         val newFile: MutableList<String> = ArrayList()
         //逐行扫描,匹配注释并替换
-        Scanner(file, "UTF-8").use { scanner ->
-            while (scanner.hasNextLine()) {
-                var nextLine: String = scanner.nextLine()
-                for ((key, value) in commentMap) {
-                    if (nextLine.contains(key)) {
-                        if (value == "# ") {
-                            nextLine = ""
-                            break
-                        }
-                        nextLine = nextLine.substring(0, nextLine.indexOf(key)) + value
+        file.readLines().forEach {
+            var nextLine: String = it
+            for ((key, value) in commentMap) {
+                if (nextLine.contains(key)) {
+                    if (value == "# ") {
+                        nextLine = ""
                         break
                     }
+                    nextLine = nextLine.substring(0, nextLine.indexOf(key)) + value
+                    break
                 }
-                newFile.add(nextLine)
             }
-            //写入数据到临时文件
-            Files.write(commentedFile.toPath(), newFile)
-            //复制替换
-            copyFileUsingStream(commentedFile, file)
-            //删除临时文件
-            Files.delete(commentedFile.toPath())
+            newFile.add(nextLine)
         }
+        //写入数据到临时文件
+        Files.write(commentedFile.toPath(), newFile)
+        //复制替换
+        copyFileUsingStream(commentedFile, file)
+        //删除临时文件
+        Files.delete(commentedFile.toPath())
 
     }
 
@@ -313,9 +311,8 @@ open class SimpleYAMLConfig(
     private fun getAllFields(): List<Field> {
         val fields = mutableListOf<Field>()
         var superClass: Class<*> = this::class.java
-        while (true) {
-            if (superClass == SimpleYAMLConfig::class.java) break
-            fields.addAll(0, superClass.declaredFields.toList())
+        while (superClass != SimpleYAMLConfig::class.java) {
+            fields.addAll(0, listOf(*superClass.declaredFields))
             superClass = superClass.superclass
         }
         return fields

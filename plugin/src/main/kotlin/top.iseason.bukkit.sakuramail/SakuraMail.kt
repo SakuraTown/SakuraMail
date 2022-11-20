@@ -52,7 +52,7 @@ object SakuraMail : KotlinPlugin() {
         MailContentYml.load(false)
         MailBoxGUIYml.load(false)
         PlayerListener.register()
-        if (AuthMeHook.hasHooked) {
+        if (MailReceiversYml.enableed && AuthMeHook.hasHooked) {
             listen<LoginEvent> {
                 PlayerListener.onLogin(player)
             }
@@ -61,7 +61,7 @@ object SakuraMail : KotlinPlugin() {
                     it.onSend(it.getAllReceivers(it.receivers, player))
                 }
             }
-        } else {
+        } else if (MailReceiversYml.enableed) {
             listen<PlayerLoginEvent> {
                 PlayerListener.onLogin(player)
             }

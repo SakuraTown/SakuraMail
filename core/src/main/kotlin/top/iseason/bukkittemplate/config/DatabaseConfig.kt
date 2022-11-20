@@ -30,11 +30,11 @@ object DatabaseConfig : SimpleYAMLConfig() {
 
     @Comment("", "数据库类型: 支持 MySQL、MariaDB、SQLite、H2、Oracle、PostgreSQL、SQLServer")
     @Key
-    var database = "H2"
+    var database = "SQLite"
 
     @Comment("", "数据库地址")
     @Key
-    var url = File(BukkitTemplate.getPlugin().dataFolder, "database").absoluteFile.toString()
+    var url = File(BukkitTemplate.getPlugin().dataFolder, "database.db").absoluteFile.toString()
 
     @Comment("", "数据库名")
     @Key

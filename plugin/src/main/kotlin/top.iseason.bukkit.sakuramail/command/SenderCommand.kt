@@ -2,6 +2,7 @@ package top.iseason.bukkit.sakuramail.command
 
 import org.bukkit.command.CommandSender
 import org.bukkit.permissions.PermissionDefault
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import top.iseason.bukkit.sakuramail.Lang
 import top.iseason.bukkit.sakuramail.config.MailSenderYml
@@ -42,7 +43,6 @@ object SenderCreateCommand : CommandNode(
         MailSendersYml.senders[id] = MailSenderYml(id, type, param, emptyList(), emptyList())
         it.sendColorMessage("&a创建成功，细节请前往配置文件修改!")
         MailSendersYml.saveAll()
-        true
     }
 }
 
