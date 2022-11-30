@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 
 @FilePath("senders.yml")
 object MailSendersYml : SimpleYAMLConfig() {
-    val executor = ScheduledThreadPoolExecutor(3).apply {
+    val executor = ScheduledThreadPoolExecutor(1).apply {
         removeOnCancelPolicy = true
     }
     val scheduler: Scheduler = StdSchedulerFactory(SakuraMail.loadOrCopyQuartzProperties()).scheduler

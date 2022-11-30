@@ -19,6 +19,7 @@ import top.iseason.bukkittemplate.config.DatabaseConfig
 import top.iseason.bukkittemplate.config.SimpleYAMLConfig
 import top.iseason.bukkittemplate.config.dbTransaction
 import top.iseason.bukkittemplate.debug.info
+import top.iseason.bukkittemplate.debug.warn
 import top.iseason.bukkittemplate.ui.UIListener
 import top.iseason.bukkittemplate.utils.bukkit.EventUtils.listen
 import top.iseason.bukkittemplate.utils.bukkit.EventUtils.register
@@ -35,17 +36,22 @@ import java.util.*
 
 object SakuraMail : KotlinPlugin() {
 
-    override fun onAsyncLoad() {
+    override fun onLoad() {
         SimpleYAMLConfig.notifyMessage = "&7配置文件 &6%s &7已重载!"
     }
 
-    override fun onAsyncEnable() {
+    override fun onEnable() {
         info("&6插件初始化中...")
         Lang.load(false)
         PlaceHolderHook
         ItemsAdderHook
         DatabaseConfig.load(false)
-        DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
+        kotlin.runCatching {
+            DatabaseConfig.initTables(PlayerTimes, SystemMails, MailReceivers, MailSenders, MailRecords)
+        }.getOrElse {
+            it.printStackTrace()
+            warn("数据库初始化失败!")
+        }
         SystemMailsYml.load(false)
         MailReceiversYml.load(false)
         MailSendersYml.load(false)

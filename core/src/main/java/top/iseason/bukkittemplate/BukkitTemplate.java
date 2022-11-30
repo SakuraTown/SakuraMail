@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.iseason.bukkittemplate.dependency.DependencyManager;
+import top.iseason.bukkittemplate.hook.PlaceHolderHook;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +15,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarFile;
 
 /**
@@ -32,27 +32,29 @@ public class BukkitTemplate extends JavaPlugin {
     public BukkitTemplate() {
         plugin = this;
         //防止卡主线程
-        CompletableFuture.supplyAsync(() -> {
-            DependencyManager.parsePluginYml();
-            classes = loadClass();
-            return findInstance();
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            onDisable();
-            this.getLogger().warning("插件依赖异常，已注销插件!");
-            return null;
-        }).thenAcceptAsync(instance -> {
-            if (instance == null) return;
-            ktPlugin = instance;
-            instance.onAsyncLoad();
-            setEnabled(true);
-            Bukkit.getScheduler().runTask(this, instance::onEnable);
-            Bukkit.getScheduler().runTaskAsynchronously(this, instance::onAsyncEnable);
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            this.getLogger().warning("插件加载异常!");
-            return null;
-        });
+        DependencyManager.parsePluginYml();
+        classes = loadClass();
+        ktPlugin = findInstance();
+//        CompletableFuture.supplyAsync(() -> {
+//            classes = loadClass();
+//            return findInstance();
+//        }).exceptionally(throwable -> {
+//            throwable.printStackTrace();
+//            onDisable();
+//            this.getLogger().warning("插件依赖异常，已注销插件!");
+//            return null;
+//        }).thenAcceptAsync(instance -> {
+//            if (instance == null) return;
+//            ktPlugin = instance;
+//            instance.onAsyncLoad();
+//            setEnabled(true);
+//            Bukkit.getScheduler().runTask(this, instance::onEnable);
+//            Bukkit.getScheduler().runTaskAsynchronously(this, instance::onAsyncEnable);
+//        }).exceptionally(throwable -> {
+//            throwable.printStackTrace();
+//            this.getLogger().warning("插件加载异常!");
+//            return null;
+//        });
     }
 
 
@@ -144,13 +146,17 @@ public class BukkitTemplate extends JavaPlugin {
         return ktPlugin;
     }
 
-    // 比 onEnabled 先调用
-    public void onAsyncLoad() {
-        ktPlugin.onAsyncLoad();
+    @Override
+    public void onLoad() {
+        ktPlugin.onLoad();
     }
 
-    public void onEnabled() {
+    @Override
+    public void onEnable() {
+        PlaceHolderHook.INSTANCE.checkHooked();
         ktPlugin.onEnable();
+        Bukkit.getScheduler().runTaskAsynchronously(this, this::onAsyncEnabled);
+//        CompletableFuture.runAsync(this::onAsyncEnabled);
     }
 
     public void onAsyncEnabled() {

@@ -188,7 +188,7 @@ open class SimpleYAMLConfig(
         if (currentTimeMillis - updateTime < 2000L) return false
         updateTime = currentTimeMillis
 //        sleep(300L)
-        val loadConfiguration = YamlConfiguration.loadConfiguration(configPath)
+        val loadConfiguration = config
         val temp = YamlConfiguration()
         val commentMap = mutableMapOf<String, String>()
         //缺了键补上
@@ -243,7 +243,7 @@ open class SimpleYAMLConfig(
         }
         //转换注释
         commentFile(configPath, commentMap)
-        config = loadConfiguration
+        config = YamlConfiguration.loadConfiguration(configPath)
         return true
     }
 
@@ -269,26 +269,31 @@ open class SimpleYAMLConfig(
         val commentedFile = File(file.path + ".tmp")
         val newFile: MutableList<String> = ArrayList()
         //逐行扫描,匹配注释并替换
-        file.readLines().forEach {
-            var nextLine: String = it
-            for ((key, value) in commentMap) {
-                if (nextLine.contains(key)) {
-                    if (value == "# ") {
-                        nextLine = ""
+        Scanner(file, "UTF-8").use { scanner ->
+            while (scanner.hasNextLine()) {
+                var nextLine: String = scanner.nextLine()
+                for ((key, value) in commentMap) {
+                    if (nextLine.contains(key)) {
+                        if (value == "# ") {
+                            nextLine = ""
+                            break
+                        }
+                        nextLine = nextLine.substring(0, nextLine.indexOf(key)) + value
                         break
                     }
-                    nextLine = nextLine.substring(0, nextLine.indexOf(key)) + value
-                    break
                 }
+                newFile.add(nextLine)
             }
-            newFile.add(nextLine)
+            //写入数据到临时文件
+            Files.write(commentedFile.toPath(), newFile)
+            //复制替换
+            copyFileUsingStream(commentedFile, file)
+            //删除临时文件
+            try {
+                Files.delete(commentedFile.toPath())
+            } catch (_: Exception) {
+            }
         }
-        //写入数据到临时文件
-        Files.write(commentedFile.toPath(), newFile)
-        //复制替换
-        copyFileUsingStream(commentedFile, file)
-        //删除临时文件
-        Files.delete(commentedFile.toPath())
 
     }
 
@@ -299,11 +304,7 @@ open class SimpleYAMLConfig(
     private fun copyFileUsingStream(source: File, dest: File) {
         FileInputStream(source).use { fis ->
             FileOutputStream(dest).use { fos ->
-                val buffer = ByteArray(1024)
-                var length: Int
-                while (fis.read(buffer).also { length = it } > 0) {
-                    fos.write(buffer, 0, length)
-                }
+                fos.channel.transferFrom(fis.channel, 0, fis.channel.size())
             }
         }
     }
@@ -312,7 +313,7 @@ open class SimpleYAMLConfig(
         val fields = mutableListOf<Field>()
         var superClass: Class<*> = this::class.java
         while (superClass != SimpleYAMLConfig::class.java) {
-            fields.addAll(0, listOf(*superClass.declaredFields))
+            fields.addAll(0, superClass.declaredFields.toList())
             superClass = superClass.superclass
         }
         return fields
